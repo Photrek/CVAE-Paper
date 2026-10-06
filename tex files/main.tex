@@ -357,8 +357,8 @@ Z(\mathbf{\Sigma}, \kappa)
 & \kappa = 0,
 \\[1em]
 \displaystyle
-\frac{\Gamma\left(-\frac{1}{\kappa}-\frac{d}{2}\right)}
-{\Gamma\left(-\frac{1}{\kappa}\right)}
+\frac{\Gamma\left(1-\frac{1}{\kappa}-\frac{d}{2}\right)}
+{\Gamma\left(1-\frac{1}{\kappa}\right)}
 \left(-\frac{2\pi}{\kappa}\right)^{d/2},
 & -\frac{2}{d} < \kappa < 0.
 \end{cases}
@@ -379,7 +379,7 @@ The coupled entropy, $H_\kappa,$ is structured such that its average over the di
     f/^{\iota(\kappa,d_22)}(\mathbf{x}) 
     dF(x_j)dF(x_i)
 \end{align}
-where the symbol $/^{\iota(\kappa,d_2m)}$ is used to indicate the independent-equals distribution for the $m^{th}$ moment and the Riemann–Stieltjes integral is used to unify continuous and discrete expressions. The independent-equals distribution of $f$ is still a coupled Gaussian but with modified coupling, $\tilde{\kappa}=\frac{\kappa}{1+\kappa},$ and scale, $\tilde{\sigma}=\frac{\sigma}{1+\kappa}.$ From these foundations, the coupled entropy for $d-$dimensional distributions with the stretching parameter equal to $2$ for the coupled Gaussian distribution is defined as
+where the symbol $/^{\iota(\kappa,d_2m)}$ is used to indicate the independent-equals distribution for the $m^{th}$ moment and the Riemann–Stieltjes integral is used to unify continuous and discrete expressions. The independent-equals distribution of $f$ is still a coupled Gaussian but with modified coupling, $\tilde{\kappa}=\frac{\kappa}{1+\kappa},$ and scale, $\tilde{\sigma}=\frac{\sigma}{\sqrt{1+\kappa}}.$ From these foundations, the coupled entropy for $d-$dimensional distributions with the stretching parameter equal to $2$ for the coupled Gaussian distribution is defined as
 
 \begin{equation} \label{CE}
 H_\kappa\left(\mathbf{X};2,d\right)
@@ -673,7 +673,7 @@ The dense neural network architectures were [discuss layers, parameters, make an
        
 \section{Results} 
 
-In this section, we show the initial results of the CVAE performance. To train the model, we consider the CelebA dataset (CelebFaces Attributes Dataset), a widely used dataset for computer vision tasks involving human faces. This data set contains $202,599$ images of celebrity faces with high variability and visual richness, making it an ideal benchmark for learning complex data distributions and testing the performance of generative models. For testing purposes, we use an image size of $128\times128$ (original images are $178\times178$), a batch size of $64$ images, a learning rate of $ 5\times10^ {-4}$, and a latent dimension of $d =10$.
+In this section, we show the initial results of the CVAE performance. To train the model, we consider the CelebA dataset (CelebFaces Attributes Dataset), a widely used dataset for computer vision tasks involving human faces. This data set contains $202,599$ images of celebrity faces with high variability and visual richness, making it an ideal benchmark for learning complex data distributions and testing the performance of generative models. For testing purposes, we use an image size of $128\times128$ (original images are $178\times178$), a batch size of $64$ images, a learning rate of $ 5\times10^ {-4}$, and a latent dimension of $d =100$.
 
 \begin{figure}[ht!]
         \centering
@@ -682,13 +682,13 @@ In this section, we show the initial results of the CVAE performance. To train t
 		\label{Fig_energy.png}
 \end{figure}
 
-The model was trained using Adam Optimizer and without a learning rate scheduler. Gradient clipping with a maximum norm of 10 was applied to prevent exploding gradients and improve stability. To ensure reproducibility and consistent weight initialization, all linear and transposed convolution layers were initialized using the Kaiming uniform method (for layers with LeakyReLU activations), while linear layers used Xavier initialization. Batch normalization layers were initialized with unit scale and zero bias, and their running statistics were reset when loading checkpoints, helping stabilize the internal covariate shift during training. The CelebA data set was randomly split into $70\%$ training, $15\% $ validation, and $15\%$ test sets, and the data was shuffled at the beginning of each epoch. The models were trained and validated using samples from the independent equals distribution. For validation and testing, samples were drawn from the coupled Gaussian and the independent equals distribution for comparison. A fixed batch of validation images generated consistent reconstructions and samples across epochs for visual assessment.
+The model was trained using Adam Optimizer and without a learning rate scheduler. To ensure reproducibility and consistent weight initialization, all linear and transposed convolution layers were initialized using the Kaiming uniform method (for layers with LeakyReLU activations), while linear layers used Xavier initialization. Batch normalization layers were initialized with unit scale and zero bias, and their running statistics were reset when loading checkpoints, helping stabilize the internal covariate shift during training. The CelebA data set was randomly split into $70\%$ training, $15\% $ validation, and $15\%$ test sets, and the data was shuffled at the beginning of each epoch. The models were trained and validated using samples from the independent equals distribution. For validation and testing, samples were drawn from the coupled Gaussian and the independent equals distribution for comparison. A fixed batch of validation images generated consistent reconstructions and samples across epochs for visual assessment.
 
 The architecture employed for the VAE and CVAE models consists of a convolutional encoder-decoder structure. The encoder is built from four convolutional layers with increasing depth (32 to 256 channels), followed by batch normalization and LeakyReLU activation functions. The encoded feature map is flattened and passed through two linear layers to produce the latent mean and log-variance vectors. The decoder mirrors the encoder structure with transposed convolutions, batch normalization, and LeakyReLU activations, culminating in a final Sigmoid layer to map outputs to the $[0, 1]$ range. 
 
 We conducted the experiments using PyTorch's automatic differentiation framework (autograd), which computes gradients based on the standard Euclidean geometry of the parameter space. Although this approach is sufficient for baseline comparisons and initial performance assessments, it does not account for the curved geometry induced by the coupled exponential family. Future work will incorporate the information geometric formulation introduced in this paper, using the analytically derived gradients and curvature-aware optimization based on the coupled free energy. This is expected to improve the efficiency and stability of the learning convergence by aligning the optimization trajectory with the intrinsic geometry of the coupled statistical manifold.
 
-In Fig.  we show that the CVAE with $\kappa = 10^{-5}$ produces a stationary energy similar to the standard VAE $(\kappa=0)$, but the CVAE with $\kappa = 1, 10$ and $\kappa = 10^5$ shows significantly lower coupled free energy with both the training and validation data. Additionally, the CVAE energy curves with positive coupling are less noisy and have fewer and smaller spikes, which may indicate that the coupled model was trained more robustly. Because the coupled free energy metric varies with the coupling, these measurements do not provide a direct comparison; however, as the coupling increases, the metric increases in sensitivity and can rise above the $\kappa=0$ metric if the algorithm lacks robustness. For comparison, Fig. shows the standard and coupled VAE reconstructions, with the latter capturing higher fidelity.
+In Fig. \ref{Fig_energy.png} we show that the CVAE with $\kappa = 10^{-5}$ produces a stationary energy similar to the standard VAE $(\kappa=0)$, but the CVAE with $\kappa = 1, 10$ and $\kappa = 10^5$ shows significantly lower coupled free energy with both the training and validation data. Additionally, the CVAE energy curves with positive coupling are less noisy and have fewer and smaller spikes, which may indicate that the coupled model was trained more robustly. Because the coupled free energy metric varies with the coupling, these measurements do not provide a direct comparison; however, as the coupling increases, the metric increases in sensitivity and can rise above the $\kappa=0$ metric if the algorithm lacks robustness. For comparison, Fig. \ref{Fig_reconstructions.png} shows the standard and coupled VAE reconstructions, with the latter capturing higher fidelity.
 \begin{figure}[ht!]
 	   \centering
 		\includegraphics[width= \linewidth]{recons.pdf} 
@@ -700,7 +700,7 @@ In Fig.  we show that the CVAE with $\kappa = 10^{-5}$ produces a stationary ene
 	   \centering
 		\includegraphics[width= \linewidth]{extremeComp.pdf} 
            \caption{Comparison between the (a) Original images and generated reconstructions of the coupled CVAE with extreme coupling $\kappa = 10^2$ (b) without and (c) with using the independent-equals sampling. We emphasize, however, that both models were trained using the Independent-equals distribution. Training for nonlinearities as $\kappa = 10^2$ without using the independent-equals generates NANs that invalidate the training process.}
-		\label{Fig_reconstructions.png}
+		\label{fig:extreme_coupling_recons}
 \end{figure}
 
 We employ several widely used metrics to assess the quality of the generated reconstructions. These include the Fréchet Inception Distance (FID), which quantifies the similarity between the feature distributions of original and reconstructed images via an Inception-v3 network. The Kernel Inception Distance (KID) is a related metric based on a polynomial kernel and the maximum mean discrepancy. The Learned Perceptual Image Patch Similarity (LPIPS) assesses perceptual similarity by comparing deep network features extracted from a pre-trained AlexNet. We also use Peak Signal-to-Noise Ratio (PSNR) for pixel-level reconstruction accuracy, and the Structural Similarity Index Measure (SSIM) for analyzing structural information and perceived image quality. The Fréchet ResNet Distance (FRD) leverages features from a ResNet-50 backbone. Finally, Precision and Recall evaluate the fidelity and coverage of the reconstructed image distribution. We calculated Precision and Recall using a K-Nearest Neighbors manifold algorithm with 20 neighbors to ensure a robust evaluation of the boundaries in high-dimensional space.

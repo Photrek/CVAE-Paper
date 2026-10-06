@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Navigate to project root in Google Shared Drive
-cd "/content/drive/Shareddrives/Photrek & its Partners/Projects/CVAE Paper"
+# Navigate to the code folder in Google Shared Drive (data folders stay at the project root)
+cd "/content/drive/Shareddrives/Photrek & its Partners/Projects/CVAE Paper/code"
 
 echo "=========================================="
 echo "STARTING FULL AUTOMATED MNIST PIPELINE"

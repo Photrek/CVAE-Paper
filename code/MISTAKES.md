@@ -1,0 +1,7 @@
+# code/ — mistakes
+
+- **Sampling straight from the heavy-tailed latent (no IE scaling) at large κ.** Training at κ = 10² gave NaNs. The posterior has infinite variance for κ ≥ 1/2 (in the Gamma mixture, ν = 2/κ), so rare huge samples blow up the decoder. Fix: train with the independent-equals distribution (σ/√(1+κ), κ̃ = κ/(1+κ)) and drop the scaling only at inference.
+- **Reconstruction loss scaling.** An earlier version used `2κ` in the coupled sum and put the 0.5 outside. The coupled sum is `0.5·‖x−x̂‖² ⊕_κ A_xz` with the plain κ.
+- **Partition function in the old κ convention (fixed 2026-10-06).** `compute_log_partition_function` normalized (1 + κQ)^−(1+dκ)/(2κ), so it returned the paper's Z at 2κ, while the sampler and exponents used the paper's κ. Mode 7 had the same leftover, log1p(κQ) instead of log1p(κQ/2). All CelebA κ > 0 results before this date were deleted. Check any Z change against a brute-force integral (d = 2 must give 2π for every κ).
+- **Shared reconstruction folders (fixed 2026-10-06).** `/content/evaluation_dataset/reconstructions_<κ>…` had no model name, so CVAE and heavy_vae read and skipped each other's images. Folder names now include the model.
+- **Coupled divergence terms.** Earlier versions used a separate "information κ", an exponent other than 1/(1+κd/2) on the log partition, and 0.5 factors on A_q and A_p. All three disagree with Theorem `theorem_CFE`. Use κ itself, the exponent 1/(1+κd/2), and no 0.5 on A_q, A_p.

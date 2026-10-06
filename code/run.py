@@ -116,7 +116,8 @@ output_directory = os.path.abspath(os.path.join(base_output_folder, f'outputs_{p
 local_eval_base = '/content/evaluation_dataset'
 evaluation_originals_dir = os.path.join(local_eval_base, 'originals')
 # Redirect reconstructions folder to local SSD
-evaluation_reconstructions_dir = os.path.join(local_eval_base, f'reconstructions_{param_str}_dim_{latent_dimension}_samples_{number_of_samples}')
+# The model name keeps CVAE and benchmark reconstructions apart on the shared SSD folder
+evaluation_reconstructions_dir = os.path.join(local_eval_base, f'reconstructions_{model_folders[model_choice]}_{param_str}_dim_{latent_dimension}_samples_{number_of_samples}')
 
 
 os.makedirs(output_directory, exist_ok=True)
@@ -182,30 +183,29 @@ def compute_log_partition_function(log_determinant, kappa, alpha, dimension):
     
     if alpha != 2:
         raise ValueError("Only alpha=2 is supported.")
-    if float(kappa) <= -1.0 / dim_value:
-        raise ValueError(f"kappa must be strictly greater than -1/d = {-1.0/dim_value}")
-        
+    # Paper Eq. partitionFunctionCoupledGaussian, for the density (1 + kappa*Q/2)^-(1 + kappa*d/2)/kappa
+    if float(kappa) <= -2.0 / dim_value:
+        raise ValueError(f"kappa must be strictly greater than -2/d = {-2.0/dim_value}")
+
     two_pi_tensor = torch.tensor(2.0 * math.pi, dtype=precision_dtype, device=log_determinant.device)
-    
+
     if torch.isclose(kappa_tensor, torch.tensor(0.0, dtype=precision_dtype), atol=1e-12) or torch.abs(kappa_tensor) < 1e-6:
         return 0.5 * log_determinant + 0.5 * dim_value * torch.log(two_pi_tensor)
-    
-    log_base_term = 0.5 * log_determinant + 0.5 * dim_value * torch.log(two_pi_tensor)
-    
+
+    half_dim = dim_value / 2.0
+
     if float(kappa) > 0.0:
-        term_1 = torch.log1p(dim_value * kappa_tensor) - (dim_value / 2.0) * torch.log(2.0 * kappa_tensor)
-        beta_x = 1.0 / (2.0 * kappa_tensor) + 1.0
-        beta_y = torch.tensor(dim_value / 2.0, dtype=precision_dtype, device=log_determinant.device)
-        log_beta_function = torch.special.gammaln(beta_x) + torch.special.gammaln(beta_y) - torch.special.gammaln(beta_x + beta_y)
-        log_function_term = term_1 + log_beta_function - torch.special.gammaln(beta_y)
+        # Gamma(1/k) / Gamma(1/k + d/2) * (2*pi/k)^(d/2)
+        log_function_term = (torch.special.gammaln(1.0 / kappa_tensor)
+                             - torch.special.gammaln(1.0 / kappa_tensor + half_dim)
+                             + half_dim * torch.log(two_pi_tensor / kappa_tensor))
     else:
-        term_1 = -(dim_value / 2.0) * torch.log(-2.0 * kappa_tensor)
-        beta_x = (1.0 + dim_value * kappa_tensor) / (-2.0 * kappa_tensor) + 1.0
-        beta_y = torch.tensor(dim_value / 2.0, dtype=precision_dtype, device=log_determinant.device)
-        log_beta_function = torch.special.gammaln(beta_x) + torch.special.gammaln(beta_y) - torch.special.gammaln(beta_x + beta_y)
-        log_function_term = term_1 + log_beta_function - torch.special.gammaln(beta_y)
-        
-    log_partition_total = log_base_term + log_function_term
+        # Gamma(1 - 1/k - d/2) / Gamma(1 - 1/k) * (-2*pi/k)^(d/2), compact support
+        log_function_term = (torch.special.gammaln(1.0 - 1.0 / kappa_tensor - half_dim)
+                             - torch.special.gammaln(1.0 - 1.0 / kappa_tensor)
+                             + half_dim * torch.log(-two_pi_tensor / kappa_tensor))
+
+    log_partition_total = 0.5 * log_determinant + log_function_term
     return log_partition_total
 
 
@@ -747,7 +747,7 @@ def generate_corrupted_reconstructions(model, device, kappa, dimension):
     with torch.no_grad():
         for corruption in corruptions:
             corrupted_input_dir = os.path.join(base_eval_dir, corruption)
-            target_recon_dir = os.path.join(base_eval_dir, f"reconstructions_{corruption}_{param_str}_dim_{dimension}_samples_{number_of_samples}")
+            target_recon_dir = os.path.join(base_eval_dir, f"reconstructions_{corruption}_{model_folders[model_choice]}_{param_str}_dim_{dimension}_samples_{number_of_samples}")
             
             
             if not os.path.exists(corrupted_input_dir):
@@ -1023,8 +1023,9 @@ def execute_standard_free_energy_analysis(model, dataloader, device, kappa, dime
                 m_latent = (1.0 + 0.5 * kappa * dimension) / kappa
                 m_data = (1.0 + 0.5 * kappa * data_space_dim) / kappa
                 
-                kl_log_terms = m_latent * (torch.log1p(kappa * quad_p) - torch.log1p(kappa * quad_q))
-                recon_log_terms = m_data * torch.log1p(kappa * quad_recon)
+                # The paper's density uses 1 + kappa*Q/2, so the 0.5 sits inside log1p
+                kl_log_terms = m_latent * (torch.log1p(0.5 * kappa * quad_p) - torch.log1p(0.5 * kappa * quad_q))
+                recon_log_terms = m_data * torch.log1p(0.5 * kappa * quad_recon)
                 
             # Average over Monte Carlo samples
             mc_kl_terms = torch.mean(kl_log_terms, dim=1)  # Shape: (Batch,)

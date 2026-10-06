@@ -20,7 +20,7 @@ from sklearn.metrics import pairwise_distances
 # ==========================================
 # CONFIGURATION & CONSTANTS
 # ==========================================
-parser = argparse.ArgumentParser(description="Calculate Robustness Metrics")
+parser = argparse.ArgumentParser(description="Calculate Standard Metrics")
 parser.add_argument("dataset", type=int, choices=[1, 2], help="1 = CelebA, 2 = MNIST")
 args = parser.parse_args()
 
@@ -30,7 +30,6 @@ LOCAL_EVAL_DIR = '/content/evaluation_dataset'
 DRIVE_ZIP_PATH = os.path.join(BASE_DIR, "evaluation_dataset.zip")
 
 MODEL_DIRS = ['cvae', 'heavy_vae', 'beta_vae', 'prior_vae']
-CORRUPTIONS = ["gaussian_noise", "motion_blur", "fog", "shot_noise"]
 BATCH_SIZE = 32
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -51,9 +50,6 @@ def extract_zip_if_present():
             with zipfile.ZipFile(DRIVE_ZIP_PATH, 'r') as zip_ref:
                 zip_ref.extractall('/content')
             print("Extraction complete!")
-
-def get_image_paths(folder_path):
-    return sorted(glob.glob(os.path.join(folder_path, "*.png")))
 
 def load_image_batch(paths, as_uint8=False):
     images = []
@@ -95,7 +91,8 @@ def compute_paired_metrics(orig_paths, recon_paths):
     psnr_scores, ssim_scores, lpips_scores = [], [], []
     num_images = len(orig_paths)
     
-    for i in tqdm(range(0, num_images, BATCH_SIZE), desc="    Paired Metrics", leave=False):
+    print("    Computing Paired Metrics (PSNR, SSIM, LPIPS)...")
+    for i in tqdm(range(0, num_images, BATCH_SIZE), desc="Paired Metrics", leave=False):
         batch_orig = orig_paths[i:i+BATCH_SIZE]
         batch_recon = recon_paths[i:i+BATCH_SIZE]
 
@@ -121,7 +118,8 @@ def compute_distribution_metrics(orig_paths, recon_paths):
     
     num_images = len(orig_paths)
     
-    for i in tqdm(range(0, num_images, BATCH_SIZE), desc="    Dist Metrics", leave=False):
+    print("    Computing Distribution Metrics (FID, KID)...")
+    for i in tqdm(range(0, num_images, BATCH_SIZE), desc="Dist Metrics", leave=False):
         batch_orig = orig_paths[i:i+BATCH_SIZE]
         batch_recon = recon_paths[i:i+BATCH_SIZE]
 
@@ -149,18 +147,22 @@ def compute_distribution_metrics(orig_paths, recon_paths):
 def extract_resnet_features(paths):
     resnet = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1).to(DEVICE)
     resnet.eval()
+    
     feature_extractor = torch.nn.Sequential(*list(resnet.children())[:-1]).to(DEVICE)
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    
     features = []
     with torch.no_grad():
-        for i in tqdm(range(0, len(paths), BATCH_SIZE), desc="    ResNet Feat", leave=False):
+        for i in tqdm(range(0, len(paths), BATCH_SIZE), desc="ResNet Features", leave=False):
             batch_tensors = load_image_batch(paths[i:i+BATCH_SIZE], as_uint8=False)
             batch_tensors = normalize(batch_tensors)
             out = feature_extractor(batch_tensors)
             features.append(out.view(out.size(0), -1).cpu().numpy())
+            
     return np.concatenate(features, axis=0)
 
 def compute_frd_prec_rec(orig_paths, recon_paths):
+    print("    Extracting ResNet50 Features for FRD, Precision, and Recall...")
     real_features = extract_resnet_features(orig_paths)
     fake_features = extract_resnet_features(recon_paths)
     
@@ -177,6 +179,7 @@ def compute_frd_prec_rec(orig_paths, recon_paths):
         
     frd_mean = diff.dot(diff) + np.trace(sigma_real + sigma_fake - 2.0 * covmean)
     
+    print("    Computing K-NN Precision and Recall Manifolds (k=20)...")
     nn_real = NearestNeighbors(n_neighbors=20, n_jobs=-1).fit(real_features)
     nn_fake = NearestNeighbors(n_neighbors=20, n_jobs=-1).fit(fake_features)
     
@@ -186,6 +189,7 @@ def compute_frd_prec_rec(orig_paths, recon_paths):
     fake_radii = fake_distances[:, -1]
     
     dist_fake_to_real = pairwise_distances(fake_features, real_features, n_jobs=-1)
+    
     is_in_real_manifold = (dist_fake_to_real <= real_radii.reshape(1, -1)).any(axis=1)
     prec_mean = is_in_real_manifold.mean()
     
@@ -203,85 +207,78 @@ def compute_frd_prec_rec(orig_paths, recon_paths):
 # ==========================================
 if __name__ == "__main__":
     extract_zip_if_present()
-    print(f"Aggregating robustness metrics for {DATASET_NAME}...")
+    print(f"Calculating standard metrics for {DATASET_NAME}...")
     
     orig_dir = os.path.join(LOCAL_EVAL_DIR, 'originals')
-    orig_paths = get_image_paths(orig_dir)
+    orig_paths = sorted(glob.glob(os.path.join(orig_dir, "*.png")))
     
     if not orig_paths:
         raise FileNotFoundError(f"No original images found in {orig_dir}!")
-
+        
     for model_name in MODEL_DIRS:
         model_path = os.path.join(BASE_DIR, model_name)
         if not os.path.exists(model_path):
             continue
             
         print(f"\n==========================================")
-        print(f"EVALUATING ROBUSTNESS FOR MODEL: {model_name.upper()}")
+        print(f"PROCESSING MODEL: {model_name.upper()}")
         print(f"==========================================")
         
-        checkpoint_file = os.path.join(model_path, "robustness_metrics_checkpoint.json")
+        output_results_file = os.path.join(model_path, "evaluation_results.txt")
+        checkpoint_file = os.path.join(model_path, "metrics_checkpoint.json")
+        
+        fully_processed = get_fully_processed_params(output_results_file)
         checkpoint_state = load_checkpoint(checkpoint_file)
         
         param_dirs = glob.glob(os.path.join(model_path, "outputs_*"))
         param_dirs.sort(key=lambda p: float(os.path.basename(p).split("_")[2]))
+
+        write_mode = "a" if os.path.exists(output_results_file) else "w"
         
-        for corruption in CORRUPTIONS:
-            print(f"\n  --- Processing Corruption: {corruption.upper()} ---")
-            output_results_file = os.path.join(model_path, f"robustness_results_{corruption}.txt")
-            fully_processed = get_fully_processed_params(output_results_file)
-            
-            if corruption not in checkpoint_state:
-                checkpoint_state[corruption] = {}
+        with open(output_results_file, write_mode) as results_file:
+            if write_mode == "w":
+                header = f"{'Parameter':<10} {'FID':<8} {'KID_mean':<9} {'KID_std':<8} {'LPIPS_mean':<10} {'LPIPS_std':<10} {'SSIM_mean':<12} {'SSIM_std':<12} {'PSNR_mean':<10} {'PSNR_std':<9} {'FRD':<8} {'Prec':<8} {'Rec':<8} {'F0.5':<8}\n"
+                results_file.write(header)
                 
-            write_mode = "a" if os.path.exists(output_results_file) else "w"
-            
-            with open(output_results_file, write_mode) as results_file:
-                if write_mode == "w":
-                    header = f"{'Parameter':<10} {'FID':<8} {'KID_mean':<9} {'KID_std':<8} {'LPIPS_mean':<10} {'LPIPS_std':<10} {'SSIM_mean':<12} {'SSIM_std':<12} {'PSNR_mean':<10} {'PSNR_std':<9} {'FRD':<8} {'Prec':<8} {'Rec':<8} {'F0.5':<8}\n"
-                    results_file.write(header)
+            for p_dir in param_dirs:
+                folder_name = os.path.basename(p_dir)
+                param_val = folder_name.split("_")[2] 
+                
+                if param_val in fully_processed:
+                    print(f"Skipping {param_val} (Already processed).")
+                    continue
                     
-                for p_dir in param_dirs:
-                    folder_name = os.path.basename(p_dir)
-                    param_val = folder_name.split("_")[2] 
+                # Look for reconstructions on local SSD first, then Drive output dir
+                recon_dir = os.path.join(LOCAL_EVAL_DIR, f"reconstructions_{model_name}_{folder_name.replace('outputs_', '')}")
+                if not os.path.exists(recon_dir):
+                    recon_dir = os.path.join(p_dir, "reconstructions")
                     
-                    if param_val in fully_processed:
-                        print(f"  Skipping Parameter: {param_val} (Already processed).")
-                        continue
-                        
-                    # Look for corrupted reconstructions on local SSD first, then Drive
-                    recon_dir = os.path.join(LOCAL_EVAL_DIR, f"reconstructions_{corruption}_{folder_name.replace('outputs_', '')}")
-                    if not os.path.exists(recon_dir):
-                        recon_dir = os.path.join(p_dir, f"reconstructions_{corruption}")
-                        
-                    recon_paths = get_image_paths(recon_dir)
+                recon_paths = sorted(glob.glob(os.path.join(recon_dir, "*.png")))
+                
+                if not recon_paths or len(recon_paths) != len(orig_paths):
+                    print(f"Skipping {param_val} (Incomplete reconstructions in {recon_dir}).")
+                    continue
                     
-                    if not recon_paths or len(recon_paths) != len(orig_paths):
-                        print(f"  Skipping Parameter: {param_val} (Incomplete {corruption} reconstructions in {recon_dir}).")
-                        continue
-                        
-                    print(f"\n    Evaluating Parameter = {param_val}...")
-                    
-                    if param_val not in checkpoint_state[corruption]:
-                        checkpoint_state[corruption][param_val] = {}
-                    p_data = checkpoint_state[corruption][param_val]
-                    
-                    if "PSNR_mean" not in p_data:
-                        p_data.update(compute_paired_metrics(orig_paths, recon_paths))
-                        save_checkpoint(checkpoint_state, checkpoint_file)
-                    if "FID_mean" not in p_data:
-                        p_data.update(compute_distribution_metrics(orig_paths, recon_paths))
-                        save_checkpoint(checkpoint_state, checkpoint_file)
-                    if "Rec_mean" not in p_data:
-                        p_data.update(compute_frd_prec_rec(orig_paths, recon_paths))
-                        save_checkpoint(checkpoint_state, checkpoint_file)
-                    
-                    prec = p_data['Prec_mean']
-                    rec = p_data['Rec_mean']
-                    f05_score = (1.25 * prec * rec) / ((0.25 * prec) + rec) if (prec + rec) > 0 else 0.0
+                print(f"\nProcessing Parameter = {param_val}...")
+                
+                if param_val not in checkpoint_state:
+                    checkpoint_state[param_val] = {}
+                p_data = checkpoint_state[param_val]
+                
+                if "PSNR_mean" not in p_data:
+                    p_data.update(compute_paired_metrics(orig_paths, recon_paths))
+                    save_checkpoint(checkpoint_state, checkpoint_file)
+                if "FID_mean" not in p_data:
+                    p_data.update(compute_distribution_metrics(orig_paths, recon_paths))
+                    save_checkpoint(checkpoint_state, checkpoint_file)
+                if "Rec_mean" not in p_data:
+                    p_data.update(compute_frd_prec_rec(orig_paths, recon_paths))
+                    save_checkpoint(checkpoint_state, checkpoint_file)
+                
+                prec = p_data['Prec_mean']
+                rec = p_data['Rec_mean']
+                f05_score = (1.25 * prec * rec) / ((0.25 * prec) + rec) if (prec + rec) > 0 else 0.0
 
-                    row = f"{param_val:<10} {p_data['FID_mean']:<8.2f} {p_data['KID_mean']:<9.3f} {p_data['KID_std']:<8.3f} {p_data['LPIPS_mean']:<10.3f} {p_data['LPIPS_std']:<10.3f} {p_data['SSIM_mean']:<12.3f} {p_data['SSIM_std']:<12.3f} {p_data['PSNR_mean']:<10.2f} {p_data['PSNR_std']:<9.1f} {p_data['FRD_mean']:<8.2f} {p_data['Prec_mean']:<8.3f} {p_data['Rec_mean']:<8.3f} {f05_score:<8.3f}\n"
-                    results_file.write(row)
-                    results_file.flush()
-
-    print(f"\nAll robustness evaluations complete across all models!")
+                row = f"{param_val:<10} {p_data['FID_mean']:<8.2f} {p_data['KID_mean']:<9.3f} {p_data['KID_std']:<8.3f} {p_data['LPIPS_mean']:<10.3f} {p_data['LPIPS_std']:<10.3f} {p_data['SSIM_mean']:<12.3f} {p_data['SSIM_std']:<12.3f} {p_data['PSNR_mean']:<10.2f} {p_data['PSNR_std']:<9.1f} {p_data['FRD_mean']:<8.2f} {p_data['Prec_mean']:<8.3f} {p_data['Rec_mean']:<8.3f} {f05_score:<8.3f}\n"
+                results_file.write(row)
+                results_file.flush()
