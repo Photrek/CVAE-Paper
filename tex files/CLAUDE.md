@@ -3,7 +3,7 @@
 ## Build
 - `latexmk -pdf -interaction=nonstopmode main.tex` from this folder (pdflatex + bibtex). Send build output to the scratchpad with `-outdir=<scratch>` to keep aux files out of the Drive. They are gitignored anyway.
 - After a build, check the log for `undefined` citations/references and multiply-defined labels.
-- Log cleanup done 2026-10-06. Fixed: empty underfull line after each proof (`proof` redefined in `main.tex`, since `jmlr2e.sty` stays untouched), caption-package notice (`subfig` with `caption=false`), long URL overfull. Still open and cosmetic: two `Overfull \vbox` on the training algorithm page and the crypto figure page (harmless with `\raggedbottom`), and a few underfull lines in the reference list.
+- Log is clean as of 2026-10-06 (no Overfull/Underfull). Fixes: empty underfull line after each proof (`proof` redefined in `main.tex`, since `jmlr2e.sty` stays untouched), caption-package notice (`subfig` with `caption=false`), long URL, training algorithm in `\small`, `Fig_Sequential_means.png` capped at 0.45 of the text height, `\raggedright` around `\bibliography`. Rebuild and recheck the log after edits.
 
 ## Template
 - `jmlr2e.sty` with options `[abbrvbib, preprint]`. Bibliography style is abbrvnat via natbib. Use `\citep` for parenthetical and `\citet` for textual citations.

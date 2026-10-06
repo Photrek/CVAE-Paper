@@ -537,6 +537,7 @@ In algorithm \ref{alg:cvae_training} we detail the core logic of the model. Duri
 \begin{algorithm}[H]
 \caption{Coupled Variational Autoencoder (CVAE): Training and Inference}
 \label{alg:cvae_training}
+\small
 \begin{algorithmic}[1]
 \Require Full Dataset $\mathcal{D}$ partitioned into $\mathcal{D}_{train}$, $\mathcal{D}_{val}$, and $\mathcal{D}_{test}$
 \Require Target Coupling $\kappa$, Latent Dimension $d$, Batch Size $B$, Samples $S$, Epochs $E$
@@ -1138,7 +1139,7 @@ Finite-variance estimation for machine learning;  Tractable training of complex 
 
 \begin{figure}[ht!]
 	\begin{center}
-		\includegraphics[width= \linewidth]{Fig_Sequential_means.png} 
+		\includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{Fig_Sequential_means.png} 
 		\begin{center}
             \caption{\textcolor{red}{update image quality! dimension?? update sigma! after the introduction of the independent-equals!  (d) vertical axis should go from zero to 0.25. Independent equals word color in orange!!}  (a) Coupled Gaussians are generated with Generalized Box–Muller ($\ln \rightarrow \ln$) and (b) have undefined sequential means for $\kappa > 1$. (c) Independent equals sequential means converge even for $\kappa > 1$, (d) yielding robust and finite-variance estimators.}
 		\label{Fig_Sequential_means.png}
@@ -2251,6 +2252,7 @@ Consequently, for the 1-dimensional physical right tail ($d=1$, $x > \mu$), eval
 Thus, the transformation preserves the coordinates of maximum curvature.
 \end{proof}
 
-\bibliography{MICS_BibTex}
+{\raggedright
+\bibliography{MICS_BibTex}}
 
 \end{document}
