@@ -26,7 +26,7 @@ Metric tables in `tex files/main.tex` are copied from `evaluation_results.txt` a
 - **β-VAE (model 3)** is a benchmark that we will run soon on CelebA. It is also a baseline for the β-equivalence appendix, together with Prior-VAE (model 4, σ_p² = 1/√β).
 - **κ convention:** `run.py` uses the paper's κ everywhere. The density is (1 + κQ/2)^−(1+κd/2)/κ, Z follows Eq. `partitionFunctionCoupledGaussian`, the sampler uses ν = 2/κ, and the domain is κ > −2/d. Don't bring back the 2κ form.
 - Shared hyperparameters in `run.py`: Adam lr 5e-4, batch 64, 5 epochs, α=2, prior N(0,1), eval set 10,000 images, seed 42, no gradient clipping, no LR scheduler.
-- CelebA: latent dim 100, S=5, κ ∈ {1e-6, 1e-4, 1e-2, 1, 10}. Only the cvae κ = 0 baseline is on Drive (its rows are kept in the results files). Every κ > 0 run must be redone with the fixed Z. `run_celeba.sh` currently has `MODEL_CHOICE=2` (heavy_vae).
+- CelebA: latent dim 100, S=5, κ ∈ {1e-6, 1e-4, 1e-2, 1, 10}. Only the cvae κ = 0 baseline is on Drive (its rows are kept in the results files). Every κ > 0 run must be redone with the fixed Z. `run_celeba.sh` currently has `MODEL_CHOICE=1` (cvae). Switch to 2 for the heavy_vae rerun.
 - MNIST: latent dim 100 and 2, S=1, κ ∈ {0, 1e-6, 1e-4, 1e-2, 1, 1e2, 1e4, 1e6}.
 
 ## Other files

@@ -2,8 +2,8 @@
 
 ## Now
 - Rerun every κ > 0 model after the partition-function fix (done 2026-10-06: Z in the paper's κ, mode 7 log1p(κQ/2), model name in reconstruction folders; see `code/MISTAKES.md`). All CelebA κ > 0 outputs were deleted. Only the cvae κ = 0 baseline is kept.
-  1. CelebA heavy_vae: `run_celeba.sh` as is (`MODEL_CHOICE=2`).
-  2. CelebA cvae: set `MODEL_CHOICE=1` and run again. κ = 0 is not in the grid and is not needed.
+  1. CelebA cvae: `run_celeba.sh` as is (`MODEL_CHOICE=1`, committed). κ = 0 is not in the grid and is not needed. Started on Colab L4, 2026-10-06.
+  2. CelebA heavy_vae: set `MODEL_CHOICE=2` and run again.
   3. MNIST cvae, d = 100 and d = 2: `run_mnist.sh` (`mnist_data/` is empty, so this is a fresh run).
   4. Check each `epoch_log.txt` for `nan` rows, then copy the new numbers into the CelebA metric and robustness tables in `main.tex`, and redo `Fig_Energy.pdf` and `cvae_celeba_metrics_*.pdf` if they use κ > 0 runs.
 - CelebA tables list κ up to 10⁶ plus a zoom grid (10^±0.5, 10^±1.5). `run_celeba.sh` only runs {1e-6, 1e-4, 1e-2, 1, 10}. This will be updated later, after the reruns.

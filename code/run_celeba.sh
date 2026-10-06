@@ -20,7 +20,7 @@ DATASET_CHOICE=1
 #   2 = Heavy-Tail VAE (Heavy-Tail MCG, NO Scaling)
 #   3 = Beta-VAE (Standard Gaussian + Beta KL Weight)
 #   4 = Prior-VAE (Standard Gaussian + Prior Variance 1/sqrt(beta))
-MODEL_CHOICE=2    
+MODEL_CHOICE=1    
 
 LATENT_DIM=100
 NUM_SAMPLES=5
