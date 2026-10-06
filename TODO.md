@@ -10,11 +10,9 @@
 - Rewrite the stale "Architecture" subsection (it mentions TensorFlow, CIFAR and dense nets). The CNN description in Results is the correct one.
 
 ## Paper cleanup
-- Undefined citations: `vanDerMaaten2008`, `1284395` (old MNIST section).
 - Red notes still open: abstract, intro section outline, robustness Gaussian caption, crypto table and figure captions, sequential-means figure, latent-space section.
-- Replace the "old results" MNIST section with current MNIST runs (t-SNE / 2D latent from modes 6 and 1 at d = 2).
+- Replace the "old results" MNIST section with current MNIST runs (t-SNE / 2D latent from modes 6 and 1 at d = 2). The old citations (`vanDerMaaten2008`, `1284395`, empty `\citep{}`) were removed from it; add the t-SNE and SSIM citations back when it is rewritten.
 - Crypto section: the paragraph near line 1073 is unfinished ("nonzero, These results..."). The bullet list after the crypto figure is draft notes.
-- Author heading: "Igor Oliveria" typo in `\jmlrheading`. Thistleton is in the heading but not in the author blocks. Addresses are missing.
 
 ## Experiments
 - Run the beta_vae benchmark on CelebA (model 3) and add it to the same tables.
