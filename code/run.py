@@ -36,6 +36,30 @@ def set_strict_random_seeds(seed_value=42):
 set_strict_random_seeds(42)
 
 
+def capture_rng_state():
+    """RNG state for the checkpoint, stored with tensors and plain ints so torch.load(weights_only=True) accepts it."""
+    np_state = np.random.get_state()
+    state = {
+        "torch": torch.get_rng_state(),
+        "numpy_key": torch.from_numpy(np_state[1].astype(np.int64)),
+        "numpy_rest": [int(np_state[2]), int(np_state[3]), float(np_state[4])],
+    }
+    if torch.cuda.is_available():
+        state["cuda"] = [s.cpu() for s in torch.cuda.get_rng_state_all()]
+    return state
+
+
+def restore_rng_state(state):
+    """Puts the RNG state saved in a checkpoint back, so a resumed run continues the same random stream.
+    Older checkpoints have no state and keep the seed-42 start."""
+    if not state:
+        return
+    torch.set_rng_state(state["torch"].cpu())
+    np.random.set_state(("MT19937", state["numpy_key"].numpy().astype(np.uint32), *state["numpy_rest"]))
+    if "cuda" in state and torch.cuda.is_available():
+        torch.cuda.set_rng_state_all([s.cpu() for s in state["cuda"]])
+
+
 # =============================================================================
 # CONFIGURATION INPUTS & MODE SELECTION
 # =============================================================================
@@ -123,13 +147,16 @@ evaluation_reconstructions_dir = os.path.join(local_eval_base, f'reconstructions
 os.makedirs(output_directory, exist_ok=True)
 if execution_mode == 2:
     
-    # Auto-extract evaluation_dataset.zip if present
-    eval_zip_path = os.path.join(base_output_folder, 'evaluation_dataset.zip')
+    # Restore the shared evaluation set (originals + corruptions) after a Colab reset.
+    # The zip sits in the dataset folder (one level above the model folder), the same
+    # place the shell scripts and the metric scripts use. It holds a top-level
+    # evaluation_dataset/ folder, so it extracts into /content.
+    eval_zip_path = os.path.join(os.path.dirname(base_output_folder), 'evaluation_dataset.zip')
     if os.path.exists(eval_zip_path) and not os.path.exists(evaluation_originals_dir):
         import zipfile
-        print(f"Found {eval_zip_path}. Extracting...")
+        print(f"Found {eval_zip_path}. Extracting to /content ...")
         with zipfile.ZipFile(eval_zip_path, 'r') as zip_ref:
-            zip_ref.extractall(base_output_folder)
+            zip_ref.extractall('/content')
         print("Extraction complete!")
     
     os.makedirs(evaluation_originals_dir, exist_ok=True)
@@ -362,10 +389,17 @@ if execution_mode in [1, 2, 5, 6]:
         testing_subset = Subset(full_evaluation_dataset, list(range(validation_split_size, total_eval_length)))
         
     # Create the dataloaders universally
-    cpu_workers = os.cpu_count() // 2
-    training_dataloader = DataLoader(training_subset, batch_size=batch_size, shuffle=True, num_workers=cpu_workers)
-    validation_dataloader = DataLoader(validation_subset, batch_size=batch_size, shuffle=False, num_workers=cpu_workers)
-    testing_dataloader = DataLoader(testing_subset, batch_size=batch_size, shuffle=False, num_workers=cpu_workers)
+    # JPEG decoding is the CPU cost. Leave one core for the main process and cap at 8,
+    # since more workers stop helping once the GPU is the slower side.
+    # sched_getaffinity respects the cores the VM actually gives us.
+    available_cpus = len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else (os.cpu_count() or 2)
+    cpu_workers = max(1, min(8, available_cpus - 1))
+    use_cuda = torch.cuda.is_available()
+    print(f"DataLoader: {cpu_workers} workers ({available_cpus} CPUs available), pin_memory={use_cuda}")
+    training_dataloader = DataLoader(training_subset, batch_size=batch_size, shuffle=True, num_workers=cpu_workers,
+                                     pin_memory=use_cuda, persistent_workers=True, prefetch_factor=4)
+    validation_dataloader = DataLoader(validation_subset, batch_size=batch_size, shuffle=False, num_workers=cpu_workers, pin_memory=use_cuda)
+    testing_dataloader = DataLoader(testing_subset, batch_size=batch_size, shuffle=False, num_workers=cpu_workers, pin_memory=use_cuda)
 
 # =============================================================================
 # MODEL DEFINITION
@@ -626,7 +660,6 @@ def execute_training_epoch(model, optimizer, dataloader, device, current_epoch, 
         
         elbo_v, recon_v, kl_v, mean_v, var_v, _, _ = metrics
         log_file.write(f"{current_epoch}\t{global_batch_step}\t{batch_index}\t{elbo_v:.6f}\t{recon_v:.6f}\t{kl_v:.6f}\t{mean_v:.6f}\t{var_v:.6f}\n")
-        log_file.flush()
         
         global_batch_step += 1
         
@@ -668,6 +701,24 @@ def execute_validation_epoch(model, dataloader, device, current_epoch, kappa, di
             
     return accumulated_metrics_kappa / len(dataloader), accumulated_metrics_kappa_q / len(dataloader)
 
+
+def trim_log_to_epoch(log_path, last_saved_epoch):
+    """Drops log rows from epochs after the last saved checkpoint.
+    A crash between writing the log and saving the checkpoint (or in the middle of an epoch)
+    leaves rows for an epoch that will be trained again. Removing them keeps one row per epoch."""
+    if not os.path.exists(log_path):
+        return
+    with open(log_path, "r") as log_file:
+        lines = log_file.readlines()
+    kept = [lines[0]] if lines else []
+    for line in lines[1:]:
+        first_field = line.split("\t", 1)[0].strip()
+        if first_field.isdigit() and int(first_field) <= last_saved_epoch:
+            kept.append(line)
+    if len(kept) != len(lines):
+        print(f"Trimmed {len(lines) - len(kept)} log rows after epoch {last_saved_epoch} from {os.path.basename(log_path)}")
+        with open(log_path, "w") as log_file:
+            log_file.writelines(kept)
 
 def generate_and_save_epoch_images(epoch, model, device, fixed_images_batch, kappa, dimension, output_dir):
     """Generates and saves reconstructions and random samples for both kappa and kappa_q."""
@@ -1094,6 +1145,7 @@ if __name__ == "__main__":
         base_model.load_state_dict(clean_state_dict)
         network_optimizer.load_state_dict(saved_state["optimizer_state_dict"])
         starting_epoch = saved_state["epoch"] + 1
+        restore_rng_state(saved_state.get("rng_state"))
         print(f"Resuming from epoch {starting_epoch} using weights from {model_filename}")
         
     if execution_mode == 1:
@@ -1110,7 +1162,11 @@ if __name__ == "__main__":
         
         epoch_log_path = os.path.join(output_directory, "epoch_log.txt")
         batch_log_path = os.path.join(output_directory, "batch_log.txt")
-        
+
+        # Training restarts at starting_epoch, so rows of later epochs are leftovers of an interrupted run.
+        trim_log_to_epoch(epoch_log_path, starting_epoch - 1)
+        trim_log_to_epoch(batch_log_path, starting_epoch - 1)
+
         with open(epoch_log_path, "a") as epoch_logger, open(batch_log_path, "a") as batch_logger:
             if os.path.getsize(epoch_log_path) == 0:
                 epoch_logger.write("Epoch\tTrainELBO_kappaQ\tValELBO_kappa\tValELBO_kappaQ\tTrainRecon_kappaQ\tValRecon_kappa\tValRecon_kappaQ\tTrainKLD_kappaQ\tValKLD_kappa\tValKLD_kappaQ\tTrainPostMean\tValPostMean_kappa\tValPostMean_kappaQ\tTrainPostVar\tValPostVar_kappa\tValPostVar_kappaQ\tPriorMean\tPriorVar\n")
@@ -1145,10 +1201,12 @@ if __name__ == "__main__":
     
                 generate_and_save_epoch_images(current_epoch, base_model, computation_device, reference_images_batch, coupling_kappa, latent_dimension, output_directory)
     
+                batch_logger.flush()  # batch rows are written once per epoch, before the checkpoint
                 torch.save({
                     "epoch": current_epoch, 
                     "model_state_dict": base_model.state_dict(), 
-                    "optimizer_state_dict": network_optimizer.state_dict()
+                    "optimizer_state_dict": network_optimizer.state_dict(),
+                    "rng_state": capture_rng_state()
                 }, model_checkpoint_path)
                 
     elif execution_mode == 2:
@@ -1177,4 +1235,4 @@ if __name__ == "__main__":
 
 
 
-        
+        

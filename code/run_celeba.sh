@@ -26,7 +26,7 @@ LATENT_DIM=100
 NUM_SAMPLES=5
 TARGET_DRIVE_DIR="/content/drive/Shareddrives/Photrek & its Partners/Projects/CVAE Paper/celeba_data"
 
-KAPPAS=("1e-6" "1e-4" "1e-2" "1e0" "1e1")
+KAPPAS=("0" "1e-6" "1e-4" "1e-2" "1e0" "1e1")
 
 # =============================================================================
 # PHASE 1: MODEL TRAINING (Mode 1)
@@ -59,6 +59,11 @@ echo "------------------------------------------"
 python calculate_metrics.py ${DATASET_CHOICE}
 python generate_corrupted_images.py ${DATASET_CHOICE}
 
+# Save originals + corruptions to Drive right away. The corruptions are random, so every model
+# and every session must reuse this one set. Reconstructions are left out (they are rebuilt from the checkpoints).
+echo "Saving originals and corruptions to Google Drive..."
+(cd /content && zip -r -q "${TARGET_DRIVE_DIR}/evaluation_dataset.zip" evaluation_dataset -x "evaluation_dataset/reconstructions*")
+
 # =============================================================================
 # PHASE 4: ROBUSTNESS INFERENCE (Mode 4)
 # =============================================================================
@@ -79,7 +84,7 @@ echo "------------------------------------------"
 python calculate_robustness_metrics.py ${DATASET_CHOICE}
 
 echo "Zipping local evaluation dataset to Google Drive..."
-zip -r -q "${TARGET_DRIVE_DIR}/evaluation_dataset.zip" /content/evaluation_dataset
+(cd /content && zip -r -q "${TARGET_DRIVE_DIR}/evaluation_dataset.zip" evaluation_dataset)
 
 # =============================================================================
 # PHASE 6: STOCHASTIC CONSISTENCY (Mode 5)
