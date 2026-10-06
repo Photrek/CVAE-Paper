@@ -39,10 +39,15 @@
 \usepackage[normalem]{ulem}
 \usepackage{bm}
 \raggedbottom
+% jmlr2e ends proofs with \hfill\BlackBox\\[2mm], which leaves an empty underfull line.
+\renewenvironment{proof}{\par\noindent{\bf Proof\ }}{\hfill\BlackBox\par\vspace{2mm}}
+% Let long URLs break at hyphens.
+\makeatletter\g@addto@macro\UrlBreaks{\do\-}\makeatother
+\emergencystretch=2em
 \usetikzlibrary{calc} 
 \usepackage[export]{adjustbox}
 %\usepackage{figures}
-\usepackage{subfig}
+\usepackage[caption=false]{subfig}
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric, arrows, positioning} % Libraries for node shapes, arrows, and relative positioning
 \usepackage{float}
@@ -231,7 +236,7 @@ Recently, a new proof \citep{nelsonUniqueUniversalEntropy2026} has clarified tha
 
 The nonlinear statistical coupling \citep{nelsonNonlinearStatisticalCoupling2010}, $(\kappa)$ quantifies the source of nonlinearity creating fluctuations and non-exponential characteristics. It's role in defining nonlinearity is explicit in the definition of the coupled logarithm,
 \begin{equation} \label{coupledLog}
-    a\ln_\kappa x=\ln_{\sfrac{\kappa}{a}} x^a\equiv
+    a\ln_\kappa x=\ln_{\kappa/a} x^a\equiv
     \left\{\begin{matrix}\begin{matrix}
         \frac{a}{\kappa}\left(x^{\kappa}-1\right) & \kappa \neq 0 \\
         a\ln x & \kappa=0
@@ -242,7 +247,7 @@ The nonlinear statistical coupling \citep{nelsonNonlinearStatisticalCoupling2010
 where $a$ is an additional power term often associated with the shape of distribution near its location parameter. The inverse is the coupled exponential, 
 \begin{equation}
     \exp_{\kappa}\left(\frac{x}{a}\right) = 
-    \exp_{\sfrac{\kappa}{a}}^a(x)
+    \exp_{\kappa/a}^a(x)
     \equiv\left\{ \begin{matrix}
      (1+\kappa \frac{x}{a})_+^\frac{1}{\kappa} & 
      \kappa \neq 0, (b)_+ \equiv \max(0,b) \\
@@ -589,7 +594,7 @@ Algorithm \ref{alg:cvae_robustness} describes the process for testing model robu
 \Require Clean Test Dataset $\mathcal{D}_{test}$
 \Require Pre-trained $\text{Encoder}_\phi$ and $\text{Decoder}_\theta$
 \Require Target Coupling $\kappa$, Latent Dimension $d$
-\Require Set of Corruption Functions $\mathcal{C} = \{\text{Gaussian Noise, Motion Blur, Fog, Shot Noise}\}$
+\Require Set of Corruption Functions $\mathcal{C} = \{$Gaussian Noise, Motion Blur, Fog, Shot Noise$\}$
 \Statex
 \For{each corruption function $C \in \mathcal{C}$}
     \State Initialize metric accumulators for $C$ (e.g., FID, SSIM)
@@ -712,7 +717,7 @@ We evaluate the generative performance of the Coupled VAE against the standard V
 
 Table \ref{tab:metrics_improvement} illustrates the relative percentage improvements over the baseline. Capturing the heavy tails yields measurable gains across all criteria. At the optimal $\kappa = 10^0 = 1$ setting, the model achieves a 10\% improvement in perceptual similarity (LPIPS) and a 13\% gain in feature distribution matching (FRD). Expanding the manifold search to 20 neighbors reveals that generative coverage improves dramatically as well. By utilizing the independent-equals expectation during sampling, the coupled models achieve up to an 8\% increase in Precision and a 70\% increase in Recall compared to the baseline.
 
-\begin{table}[h!]
+\begin{table}[ht!]
 \centering
 \renewcommand{\arraystretch}{1.4}
 \setlength{\tabcolsep}{6pt}
@@ -736,7 +741,7 @@ $10^{6}$     & \textcolor{blue}{110.1} & \textcolor{blue}{0.112(7)} & \textcolor
 \label{tab:metrics_absolute}
 \end{table}
 
-\begin{table}[h!]
+\begin{table}[ht!]
 \centering
 \renewcommand{\arraystretch}{1.4}
 \setlength{\tabcolsep}{6pt}
@@ -787,7 +792,7 @@ Table \ref{tab:metrics_absolute_zoom} presents the absolute scores for this focu
 
 Table \ref{tab:metrics_improvement_zoom} details the relative percentage improvements across this zoomed-in domain. The plateau demonstrates a slight trade-off depending on the chosen metric. While $\kappa = 10^{0}$ achieves the optimal Fréchet Inception Distance (9\% improvement) and perceptual similarity (10\% improvement), setting the coupling to $\kappa = 10^{-1}$ yields the strongest structural distribution matching (a 13\% improvement in FRD) and the highest K-NN Precision (a 9\% gain over the baseline). This analysis confirms that tuning the coupling to the mild heavy-tailed domain ($0.1 \le \kappa \le 1.0$) explicitly optimizes the latent embedding space, securing the best overall equilibrium of visual sharpness and topological diversity.
 
-\begin{table}[h!]
+\begin{table}[ht!]
 \centering
 \renewcommand{\arraystretch}{1.4}
 \setlength{\tabcolsep}{6pt}
@@ -812,7 +817,7 @@ $10^{2}$     & \textcolor{blue}{110.3} & \textcolor{blue}{0.112(6)} & \textcolor
 \label{tab:metrics_absolute_zoom}
 \end{table}
 
-\begin{table}[h!]
+\begin{table}[ht!]
 \centering
 \renewcommand{\arraystretch}{1.4}
 \setlength{\tabcolsep}{6pt}
@@ -854,7 +859,7 @@ The heavy-tailed prior of the CVAE acts as a statistical shock absorber. Due to 
 % ==========================================
 % GAUSSIAN NOISE TABLES
 % ==========================================
-\begin{table}[h!]
+\begin{table}[ht!]
 \centering
 \renewcommand{\arraystretch}{1.4}
 \setlength{\tabcolsep}{6pt}
@@ -879,7 +884,7 @@ $10^{6}$     & \textcolor{blue}{110.3} & \textcolor{blue}{0.112(6)} & \textcolor
 \label{tab:robustness_gaussian_abs}
 \end{table}
 
-\begin{table}[h!]
+\begin{table}[ht!]
 \centering
 \renewcommand{\arraystretch}{1.4}
 \setlength{\tabcolsep}{6pt}
@@ -906,7 +911,7 @@ $10^{6}$     & \textcolor{blue}{4\%} & \textcolor{blue}{3(8)\%} & \textcolor{blu
 % ==========================================
 % MOTION BLUR TABLES
 % ==========================================
-\begin{table}[h!]
+\begin{table}[ht!]
 \centering
 \renewcommand{\arraystretch}{1.4}
 \setlength{\tabcolsep}{6pt}
@@ -931,7 +936,7 @@ $10^{6}$     & \textcolor{blue}{120.7} & \textcolor{blue}{0.123(6)} & \textcolor
 \label{tab:robustness_motion_blur_abs}
 \end{table}
 
-\begin{table}[h!]
+\begin{table}[ht!]
 \centering
 \renewcommand{\arraystretch}{1.4}
 \setlength{\tabcolsep}{6pt}
@@ -958,7 +963,7 @@ $10^{6}$     & \textcolor{blue}{2\%} & \textcolor{blue}{2(8)\%} & \textcolor{blu
 % ==========================================
 % SHOT NOISE TABLES
 % ==========================================
-\begin{table}[h!]
+\begin{table}[ht!]
 \centering
 \renewcommand{\arraystretch}{1.4}
 \setlength{\tabcolsep}{6pt}
@@ -983,7 +988,7 @@ $10^{6}$     & \textcolor{blue}{116.2} & \textcolor{blue}{0.118(7)} & \textcolor
 \label{tab:robustness_shot_noise_abs}
 \end{table}
 
-\begin{table}[h!]
+\begin{table}[ht!]
 \centering
 \renewcommand{\arraystretch}{1.4}
 \setlength{\tabcolsep}{6pt}
@@ -1010,7 +1015,7 @@ $10^{6}$     & \textcolor{blue}{5\%} & \textcolor{blue}{6(8)\%} & \textcolor{blu
 % ==========================================
 % FOG TABLES
 % ==========================================
-\begin{table}[h!]
+\begin{table}[ht!]
 \centering
 \renewcommand{\arraystretch}{1.4}
 \setlength{\tabcolsep}{6pt}
@@ -1035,7 +1040,7 @@ $10^{6}$     & \textcolor{blue}{165.7} & \textcolor{blue}{0.181(9)} & \textcolor
 \label{tab:robustness_fog_abs}
 \end{table}
 
-\begin{table}[h!]
+\begin{table}[ht!]
 \centering
 \renewcommand{\arraystretch}{1.4}
 \setlength{\tabcolsep}{6pt}
@@ -1076,10 +1081,10 @@ Across all assets, the $\kappa$-Gaussian consistently achieved lower Hyv\"arinen
 nonzero,  These results justify using a generative model with heavy-tailed latent structure, such as a coupled VAE, for modelling cryptocurrency returns.
 
 
-\begin{table}[h!]
+\begin{table}[ht!]
 \centering
 \renewcommand{\arraystretch}{1.25}
-\setlength{\tabcolsep}{6pt}
+\setlength{\tabcolsep}{3.5pt}
 \small
 \begin{tabular}{lccccccc}
 \toprule
@@ -1165,18 +1170,22 @@ We present original and reconstructed images for a visual confirmation of the ge
 \includegraphics[scale=0.5]{original_images_cdX_clX_epoch}
 
 
-\subsection{MNIST Shot Noise $\kappa=0$}
+\subsection{MNIST Shot Noise \texorpdfstring{$\kappa=0$}{kappa = 0}}
 
-\includegraphics[scale=0.5]{kappa=0 beta=1}
-\includegraphics[scale=0.5]{latent_cdX_clX_epoch}
-\includegraphics[scale=0.5]{images_cdX_clX_epoch}
+\begin{center}
+\includegraphics[width=0.32\textwidth]{kappa=0 beta=1}
+\includegraphics[width=0.32\textwidth]{latent_cdX_clX_epoch}
+\includegraphics[width=0.32\textwidth]{images_cdX_clX_epoch}
+\end{center}
 
 
-\subsection{MNIST Shot Noise $\kappa=.1$}
+\subsection{MNIST Shot Noise \texorpdfstring{$\kappa=.1$}{kappa = 0.1}}
 
-\includegraphics[scale=0.5]{images/hist beta=1 kappa=.1.png }
-\includegraphics[scale=0.5]{images/latent_cdX_clX_epoch beta=1 kappa=.1.png}
-\includegraphics[scale=0.5]{images/images_cdX_clX_epoch beta=1 kappa=.1.png}
+\begin{center}
+\includegraphics[width=0.32\textwidth]{images/hist beta=1 kappa=.1.png }
+\includegraphics[width=0.32\textwidth]{images/latent_cdX_clX_epoch beta=1 kappa=.1.png}
+\includegraphics[width=0.32\textwidth]{images/images_cdX_clX_epoch beta=1 kappa=.1.png}
+\end{center}
 
 
 
@@ -1195,7 +1204,7 @@ Research on the Coupled Variational Autoencoder conducted between 2020 and 2023 
 
 In this appendix, we establish that, under a small-deviation regime, the effect of the $\beta$ coefficient in the $\beta$-VAE objective can be equivalently interpreted as a rescaling of the prior variance. We consider the one-dimensional case; the multivariate diagonal case follows by separability. Since $\beta$ is a multiplicative factor on the Kullback-Leibler divergence between the latent posterior and prior distributions, we focus on that portion of the ELBO. In this analysis the coupling is zero.
 
-\begin{lemma}[First-order equivalence between $\beta$-VAE and prior variance]
+\begin{lemma}[Equivalence of $\beta$-VAE and prior variance]
 \label{lemma:beta_prior_equivalence}
 Let the prior and posterior latent variable be distributed as Gaussians:
 \[
@@ -1559,7 +1568,7 @@ Therefore, combining the above results, the independent-equals density preserves
 
 
 \begin{lemma}[Second independent-equals moment of a coupled Gaussian]\label{second_moment}
-Given a $d$-dimensional multivariate coupled Gaussian with mean $(\mu_q \in \mathbb{R}^d)$, positive-definite scale matrix $(\mathbf{\Sigma}_q \in \mathbb{R}^{d \times d})$, and nonlinear statistical coupling $(\kappa>0)$
+Given a $d$-dimensional multivariate coupled Gaussian with mean $\mu_q \in \mathbb{R}^d$, positive-definite scale matrix $\mathbf{\Sigma}_q \in \mathbb{R}^{d \times d}$, and nonlinear statistical coupling $\kappa>0$
 \begin{equation}
 Z|(X=x) \sim q(z \mid x) = \frac{1}{Z(\mathbf{\Sigma}_q, \kappa)}
 \Bigl(1 + \kappa \bigl[\tfrac{1}{2}(z-\mu_q)^{\!\intercal} \mathbf{\Sigma}_q^{-1} (z-\mu_q)\bigr]\Bigr)^{-\frac{1 + \kappa d/2}{\kappa}}, 
@@ -1812,8 +1821,7 @@ and the coupled reconstruction loss is
 \end{equation}
 where $p_{\theta}(x|z)$ is the decoder network's generative model, represented by a multivariate coupled Gaussian with unitary scale matrix and location given by the reconstructed image. Then, the CFE simplifies to:
 
-\begin{center}
-\resizebox{0.95\textwidth}{!}{$
+\begin{equation*}
 \begin{aligned}
 \mathcal{F}_{\theta,\phi,\kappa}(\boldsymbol{x}) &=
 -\frac{d(1+\kappa A_q)}{2}
@@ -1832,8 +1840,7 @@ where $p_{\theta}(x|z)$ is the decoder network's generative model, represented b
 (\boldsymbol{x}-\bar{\boldsymbol{x}}_{x|z})
 \oplus_\kappa A_{x|z}\right].
 \end{aligned}
-$}
-\end{center}
+\end{equation*}
 \end{theorem}
 
 \begin{proof}
@@ -1948,7 +1955,7 @@ where we used the coupled logarithm definition given by Eq. \eqref{coupledLog}. 
 \end{equation*}
 \end{proof}
 
-\begin{lemma}[Standard Free Energy of Coupled Gaussian Distributions]
+\begin{lemma}[Standard free energy of coupled Gaussians]
 \label{lemma:standard_free_energy_coupled_gaussians}
 Let $x \in \mathbb{R}^d$ and $z \in \mathbb{R}^d$ be random vectors. Let the approximate posterior $q_{\phi}(z|x)$ and prior $p_{\theta}(z)$ be multivariate coupled Gaussian distributions with a shared coupling parameter $\kappa \neq 0$:
 \begin{equation}
@@ -1961,7 +1968,8 @@ When evaluating these distributions under the standard logarithmic scale ($\kapp
 \begin{equation}
 \begin{aligned}
 D_{\kappa=0}[q(z|x) \parallel p(z)] &= \mathbb{E}_{z \sim q(z|x)} \left[ \log q(z|x) - \log p(z) \right] \\
-&= \log Z_p - \log Z_q + \frac{1 + \kappa d/2}{\kappa} \mathbb{E}_{z \sim q(z|x)} \left[ \log \left( 1 + \kappa (z - \mu_p)^\top \Sigma_p^{-1} (z - \mu_p) \right) \right. \\
+&= \log Z_p - \log Z_q \\
+&\quad + \frac{1 + \kappa d/2}{\kappa} \mathbb{E}_{z \sim q(z|x)} \left[ \log \left( 1 + \kappa (z - \mu_p)^\top \Sigma_p^{-1} (z - \mu_p) \right) \right. \\
 &\quad \left. - \log \left( 1 + \kappa (z - \mu_q)^\top \Sigma_q^{-1} (z - \mu_q) \right) \right],
 \end{aligned}
 \end{equation}

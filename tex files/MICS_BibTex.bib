@@ -1838,6 +1838,7 @@ microscopic constituents of macroscopic systems and probabilistic assumptions.2}
 
 @inproceedings{pandeyHeavyTailedDiffusionModels2024,
 	title = {Heavy-{Tailed} {Diffusion} {Models}},
+	booktitle = {OpenReview},
 	url = {https://openreview.net/forum?id=tozlOEN4qp},
 	abstract = {Diffusion models achieve state-of-the-art generation quality across many applications, but their ability to capture rare or extreme events in heavy-tailed distributions remains unclear. In this work, we show that traditional diffusion and flow-matching models with standard Gaussian priors fail to capture heavy-tailed behavior. We address this by repurposing the diffusion framework for heavy-tail estimation using multivariate Student-t distributions. We develop a tailored perturbation kernel and derive the denoising posterior based on the conditional Student-t distribution for the backward process. Inspired by \${\textbackslash}gamma\$-divergence for heavy-tailed distributions, we derive a training objective for heavy-tailed denoisers. The resulting framework introduces controllable tail generation using only a single scalar hyperparameter, making it easily tunable for diverse real-world distributions. As specific instantiations of our framework, we introduce t-EDM and t-Flow, extensions of existing diffusion and flow models that employ a Student-t prior. Remarkably, our approach is readily compatible with standard Gaussian diffusion models and requires only minimal code changes. Empirically, we show that our t-EDM and t-Flow outperform standard diffusion models in heavy-tail estimation on high-resolution weather datasets in which generating rare and extreme events is crucial.},
 	language = {en},
@@ -7699,6 +7700,7 @@ ISBN: 9783905674729},
 }
 
 @inproceedings{kim$t^3$VariationalAutoencoderLearning2023,
+	booktitle = {OpenReview},
 	title = {\$t{\textasciicircum}3\$-{Variational} {Autoencoder}: {Learning} {Heavy}-tailed {Data} with {Student}'s t and {Power} {Divergence}},
 	shorttitle = {\$t{\textasciicircum}3\$-{Variational} {Autoencoder}},
 	url = {https://openreview.net/forum?id=RzNlECeoOB},
@@ -9664,6 +9666,7 @@ arXiv:1812.02230 [cs, stat]},
 }
 
 @article{regliAlphaBetaDivergenceVariational2018,
+	journal = {arXiv preprint arXiv:1805.01045},
 	title = {Alpha-{Beta} {Divergence} {For} {Variational} {Inference}},
 	url = {http://arxiv.org/abs/1805.01045},
 	abstract = {This paper introduces a variational approximation framework using direct optimization of what is known as the \{{\textbackslash}it scale invariant Alpha-Beta divergence\} (sAB divergence). This new objective encompasses most variational objectives that use the Kullback-Leibler, the R\{{\textbackslash}'e\}nyi or the gamma divergences. It also gives access to objective functions never exploited before in the context of variational inference. This is achieved via two easy to interpret control parameters, which allow for a smooth interpolation over the divergence space while trading-off properties such as mass-covering of a target distribution and robustness to outliers in the data. Furthermore, the sAB variational objective can be optimized directly by repurposing existing methods for Monte Carlo computation of complex variational objectives, leading to estimates of the divergence instead of variational lower bounds. We show the advantages of this objective on Bayesian models for regression problems.},
