@@ -30,6 +30,15 @@ source ./pipeline_lib.sh
 
 KAPPAS=("0.0" "1e-6" "1e-4" "1e-2" "1e0" "1e2" "1e4" "1e6")
 
+# Start the slow Drive restore now, so it overlaps with phase 1. Skip phases 2-5 when they have nothing left to do.
+if eval_phases_needed; then
+    SKIP_EVAL=0
+    start_restore_eval_set
+else
+    SKIP_EVAL=1
+    echo "All models trained and all metrics computed. Phases 2-5 will be skipped."
+fi
+
 # =============================================================================
 # PHASE 1: MODEL TRAINING (Mode 1, Dim=100)
 # =============================================================================
@@ -47,7 +56,7 @@ done
 echo "------------------------------------------"
 echo "PHASE 2: Generating Evaluation Sets..."
 echo "------------------------------------------"
-restore_eval_set
+wait_restore_eval_set
 for KAPPA in "${KAPPAS[@]}"; do
     echo "Generating evaluation set for Parameter: $KAPPA"
     run_mode 2 "$KAPPA" $LATENT_DIM
@@ -59,12 +68,12 @@ done
 echo "------------------------------------------"
 echo "PHASE 3: Running Post-Processing Scripts..."
 echo "------------------------------------------"
-if python pipeline_state.py metrics ${DATASET_CHOICE} ${MODEL_CHOICE} ${LATENT_DIM} ${NUM_SAMPLES}; then
+if [ "$SKIP_EVAL" = 1 ] || python pipeline_state.py metrics ${DATASET_CHOICE} ${MODEL_CHOICE} ${LATENT_DIM} ${NUM_SAMPLES}; then
     echo "Standard metrics already computed. Skipping."
 else
     python calculate_metrics.py ${DATASET_CHOICE} ${MODEL_CHOICE}
 fi
-if python pipeline_state.py corrupt ${DATASET_CHOICE}; then
+if [ "$SKIP_EVAL" = 1 ] || python pipeline_state.py corrupt ${DATASET_CHOICE}; then
     echo "Corruptions already exist. Skipping."
 else
     python generate_corrupted_images.py ${DATASET_CHOICE}
@@ -92,7 +101,7 @@ done
 echo "------------------------------------------"
 echo "PHASE 5: Aggregating Robustness Metrics..."
 echo "------------------------------------------"
-if python pipeline_state.py metrics ${DATASET_CHOICE} ${MODEL_CHOICE} ${LATENT_DIM} ${NUM_SAMPLES} robustness; then
+if [ "$SKIP_EVAL" = 1 ] || python pipeline_state.py metrics ${DATASET_CHOICE} ${MODEL_CHOICE} ${LATENT_DIM} ${NUM_SAMPLES} robustness; then
     echo "Robustness metrics already computed. Skipping."
 else
     python calculate_robustness_metrics.py ${DATASET_CHOICE} ${MODEL_CHOICE}
