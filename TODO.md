@@ -3,10 +3,10 @@
 ## Now
 - Rerun every κ > 0 model after the partition-function fix (done 2026-10-06: Z in the paper's κ, mode 7 log1p(κQ/2), model name in reconstruction folders; see `code/MISTAKES.md`). All CelebA outputs were deleted, κ = 0 included, so all rows share the same loader and code.
   1. CelebA cvae: `run_celeba.sh` as is (`MODEL_CHOICE=1`, grid now includes κ = 0). Done 2026-10-06 on Colab L4. Resume restores the RNG state, and the corruption set is shared through `celeba_data/evaluation_dataset.zip`.
-  2. CelebA heavy_vae: set `MODEL_CHOICE=2` and run again.
+  2. CelebA heavy_vae and beta_vae (β ∈ {0.1, 0.5, 1, 2, 5, 10}): the notebook runs `MODEL_CHOICE=2` then `MODEL_CHOICE=3` overnight (launched 2026-10-07). Next: check both epoch logs for `nan` rows (heavy_vae at κ = 1, 10 may diverge; those runs are skipped in modes 2 to 7 by design), check that beta_vae β = 1 is close to cvae κ = 0, and check mode 7 rows are finite.
   3. MNIST cvae, d = 100 and d = 2: `run_mnist.sh` with S = 5 (`mnist_data/` is empty, so this is a fresh run).
   4. Check each `epoch_log_<run>.txt` (`results_epoch_log/` in the model folder) for `nan` rows, then copy the new numbers into the CelebA metric and robustness tables in `main.tex`, and redo `Fig_Energy.pdf` and `cvae_celeba_metrics_*.pdf` if they use κ > 0 runs.
-- Done 2026-10-07: mode 7 now scores every model with one common Gaussian bound (lemma `lemma:common_gaussian_evaluation` in `main.tex`, Methods paragraph before "Architecture"). The old CelebA cvae `standard_free_energy.txt` was deleted (see `code/MISTAKES.md` for why the old metric was dropped). Next: rerun mode 7 on Colab for CelebA cvae (`run_celeba.sh` reruns only mode 7 because its rows are missing), then heavy_vae and MNIST. Check that `Decoder_Sigma` is close to the RMSE implied by PSNR (≈ 0.1) and that every row is finite. No mode 7 number is in the paper yet.
+- Done 2026-10-07: mode 7 now scores every model with one common Gaussian bound (lemma `lemma:common_gaussian_evaluation` in `main.tex`, Methods paragraph before "Architecture"). The old CelebA cvae `standard_free_energy.txt` was deleted (see `code/MISTAKES.md` for why the old metric was dropped). CelebA cvae mode 7 rows are done; heavy_vae and beta_vae run with the overnight job, MNIST later. Check that `Decoder_Sigma` is close to the RMSE implied by PSNR (≈ 0.1) and that every row is finite. No mode 7 number is in the paper yet.
 - Investigate CelebA cvae κ = 1e-2. It is worse than both neighbors: PSNR 15.85 dB, compared with 20.93 at κ = 1e-4 and 20.62 at κ = 1. FID is 202.78, compared with 116.39 at κ = 0 (`results_evaluation/evaluation_results.txt`). Mode 7 only scores the trained weights, so the cause is probably the training run. Check `results_epoch_log/epoch_log_kappa_0.01_dim_100_samples_5.txt` and the batch log for loss spikes, a stalled loss or a resume jump. Check its image grids too. If one run is unlucky, retrain it (same seed) and compare. κ = 10 (PSNR 9.32) may have the same problem or a real large-κ effect, so check it in the same way.
 - Done 2026-10-06: resume/skip optimization (`code/pipeline_state.py`, `code/pipeline_lib.sh`). Tested on Colab (CelebA cvae): finished steps skip, and a fully done pipeline finishes in minutes.
 - CelebA tables list κ up to 10⁶ plus a zoom grid (10^±0.5, 10^±1.5). `run_celeba.sh` only runs {0, 1e-6, 1e-4, 1e-2, 1, 10}. This will be updated later, after the reruns.
@@ -22,7 +22,7 @@
 - Crypto section: the paragraph near line 1073 is unfinished ("nonzero, These results..."). The bullet list after the crypto figure is draft notes.
 
 ## Experiments
-- Run the beta_vae benchmark on CelebA (model 3) and add it to the same tables.
+- Add the CelebA beta_vae (model 3) results to the same tables once the overnight run finishes.
 - Latent-space analysis: MNIST neighbor graph and clustering scores. Decide whether to do the same for CelebA with its 40 attributes.
 - Find or add the code for the crypto distribution fit (Hyvärinen score matching) and for any CVAE training on crypto returns. Neither is in this repo.
 - Track the plotting scripts for `cvae_celeba_metrics_*.pdf`, `Fig_Energy.pdf` and `Beta_*.pdf` in `code/`.

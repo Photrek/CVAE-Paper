@@ -1176,9 +1176,11 @@ if __name__ == "__main__":
                     model_choice=model_choice, beta_weight=beta_weight
                 )
     
-                # IF NAN/INF OCCURRED: Log 'nan' row and stop training immediately
+                # IF NAN/INF OCCURRED: fill this and every remaining epoch with 'nan' rows and stop training,
+                # so the log has one row per epoch without spending GPU time on a diverged run
                 if training_results is None:
-                    epoch_logger.write(f"{current_epoch}\tnan\tnan\tnan\tnan\tnan\tnan\tnan\tnan\tnan\tnan\tnan\tnan\tnan\tnan\tnan\tnan\tnan\n")
+                    for nan_epoch in range(current_epoch, number_of_epochs + 1):
+                        epoch_logger.write(f"{nan_epoch}" + "\tnan" * 17 + "\n")
                     epoch_logger.flush()
                     print(f"Skipping remaining epochs for kappa={coupling_kappa} due to numerical crash.")
                     exit(0)  # Exit clean with code 0 so the bash script moves to the next parameter

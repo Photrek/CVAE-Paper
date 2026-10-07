@@ -14,6 +14,10 @@ run_mode() {
         echo "  Metrics already computed. Skipping mode $mode for Parameter $kappa."
         return
     fi
+    if [ "$mode" != 1 ] && python pipeline_state.py diverged "$DATASET_CHOICE" "$MODEL_CHOICE" "$kappa" "$dim" "$NUM_SAMPLES"; then
+        echo "  Training diverged (nan row in the epoch log) for Parameter $kappa. Skipping mode $mode."
+        return
+    fi
     if python pipeline_state.py step "$DATASET_CHOICE" "$MODEL_CHOICE" "$kappa" "$dim" "$NUM_SAMPLES" "$mode"; then
         echo "  Already done for Parameter $kappa (mode $mode). Skipping."
     else
@@ -22,10 +26,10 @@ run_mode() {
 }
 
 # eval_phases_needed: false when every model is trained and both metric tables are complete, which means phases 2-5
-# have nothing left to do and the eval set does not have to be restored. Needs KAPPAS, LATENT_DIM and NUM_SAMPLES.
+# have nothing left to do and the eval set does not have to be restored. Needs PARAMS, LATENT_DIM and NUM_SAMPLES.
 eval_phases_needed() {
     local k
-    for k in "${KAPPAS[@]}"; do
+    for k in "${PARAMS[@]}"; do
         python pipeline_state.py step "$DATASET_CHOICE" "$MODEL_CHOICE" "$k" "$LATENT_DIM" "$NUM_SAMPLES" 1 || return 0
     done
     python pipeline_state.py metrics "$DATASET_CHOICE" "$MODEL_CHOICE" "$LATENT_DIM" "$NUM_SAMPLES" || return 0

@@ -4,6 +4,7 @@ Uses only the standard library, so the check costs milliseconds. Importing torch
 and run.py also scans 200k CelebA files before it can decide to skip. Exit code 0 means "done, skip it".
 
     python pipeline_state.py step    <dataset> <model> <param> <dim> <samples> <mode>
+    python pipeline_state.py diverged <dataset> <model> <param> <dim> <samples>
     python pipeline_state.py corrupt <dataset>
     python pipeline_state.py metrics <dataset> <model> <dim> <samples> [robustness]
 
@@ -75,17 +76,29 @@ def has_free_energy_row(dataset, model, param, dim, samples):
     return False
 
 
-def training_done(dataset, out_dir, model, param, dim, samples):
+def epoch_log_rows(dataset, model, param, dim, samples):
     log_path = results_path(dataset, model, "epoch_log", f"epoch_log_{run_tag(model, param, dim, samples)}.txt")
-    ckpt_path = os.path.join(out_dir, f"{MODEL_FOLDERS[model]}_{param_str(model, param)}_dim_{dim}_latest.pth")
-    if not (os.path.exists(log_path) and os.path.exists(ckpt_path)):
-        return False
+    if not os.path.exists(log_path):
+        return log_path, []
     with open(log_path) as f:
-        rows = [line.split("\t") for line in f.read().splitlines()[1:] if line.strip()]
+        return log_path, [line.split("\t") for line in f.read().splitlines()[1:] if line.strip()]
+
+
+def training_diverged(dataset, model, param, dim, samples):
+    """True when training hit NaN/Inf. Its checkpoint (if any) is from an earlier epoch, so it must not be evaluated."""
+    _, rows = epoch_log_rows(dataset, model, param, dim, samples)
+    return bool(rows) and rows[-1][1].strip() == "nan"
+
+
+def training_done(dataset, out_dir, model, param, dim, samples):
+    log_path, rows = epoch_log_rows(dataset, model, param, dim, samples)
     if not rows:
         return False
     if rows[-1][1].strip() == "nan":
-        return True  # the run hit a numerical crash and run.py exits at once on every retry
+        return True  # numerical crash: a retry gives the same crash, and there may be no checkpoint at all
+    ckpt_path = os.path.join(out_dir, f"{MODEL_FOLDERS[model]}_{param_str(model, param)}_dim_{dim}_latest.pth")
+    if not os.path.exists(ckpt_path):
+        return False
     if not rows[-1][0].strip().isdigit() or int(rows[-1][0]) < read_run_py_constant("number_of_epochs"):
         return False
     # The checkpoint is saved after the last log row. An older checkpoint means a crash in between.
@@ -124,7 +137,8 @@ def metrics_done(dataset, model, dim, samples, robustness):
     model_dir = model_dir_of(dataset, model)
     suffix = f"_dim_{dim}_samples_{samples}"
     params = [os.path.basename(p).split("_")[2] for p in glob.glob(os.path.join(model_dir, "model_*"))
-              if p.endswith(suffix) and os.path.exists(os.path.join(model_dir, "results_epoch_log", f"epoch_log_{os.path.basename(p)[len('model_'):]}.txt"))]
+              if p.endswith(suffix) and os.path.exists(os.path.join(model_dir, "results_epoch_log", f"epoch_log_{os.path.basename(p)[len('model_'):]}.txt"))
+              and not training_diverged(dataset, model, os.path.basename(p).split("_")[2], dim, samples)]
     if not params:
         return False
     files = [f"results_robustness/robustness_results_{c}.txt" for c in CORRUPTIONS] if robustness else ["results_evaluation/evaluation_results.txt"]
@@ -144,6 +158,9 @@ if __name__ == "__main__":
     if kind == "step":
         dataset, model, param, dim, samples, mode = args
         ok = step_done(int(dataset), int(model), param, int(dim), int(samples), int(mode))
+    elif kind == "diverged":
+        dataset, model, param, dim, samples = args
+        ok = training_diverged(int(dataset), int(model), param, int(dim), int(samples))
     elif kind == "corrupt":
         ok = corruptions_done(int(args[0]))
     elif kind == "metrics":

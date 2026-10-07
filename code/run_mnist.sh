@@ -29,6 +29,7 @@ TARGET_DRIVE_DIR="/content/drive/Shareddrives/Photrek & its Partners/Projects/CV
 source ./pipeline_lib.sh
 
 KAPPAS=("0.0" "1e-6" "1e-4" "1e-2" "1e0" "1e2" "1e4" "1e6")
+PARAMS=("${KAPPAS[@]}")  # eval_phases_needed in pipeline_lib.sh loops over PARAMS
 
 # Start the slow Drive restore now, so it overlaps with phase 1. Skip phases 2-5 when they have nothing left to do.
 if eval_phases_needed; then

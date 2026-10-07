@@ -20,7 +20,8 @@ DATASET_CHOICE=1
 #   2 = Heavy-Tail VAE (Heavy-Tail MCG, NO Scaling)
 #   3 = Beta-VAE (Standard Gaussian + Beta KL Weight)
 #   4 = Prior-VAE (Standard Gaussian + Prior Variance 1/sqrt(beta))
-MODEL_CHOICE=1    
+# Set it from the caller to run another model without editing this file: MODEL_CHOICE=2 ./run_celeba.sh
+MODEL_CHOICE=${MODEL_CHOICE:-1}
 
 LATENT_DIM=100
 NUM_SAMPLES=5
@@ -28,7 +29,16 @@ TARGET_DRIVE_DIR="/content/drive/Shareddrives/Photrek & its Partners/Projects/CV
 
 source ./pipeline_lib.sh
 
-KAPPAS=("0" "1e-6" "1e-4" "1e-2" "1e0" "1e1")
+KAPPAS=("0" "1e-6" "1e-4" "1e-2" "1e0" "1e1")  # models 1-2 (CVAE, Heavy-Tail VAE)
+BETAS=("1e-1" "5e-1" "1e0" "2e0" "5e0" "1e1")  # models 3-4 (Beta-VAE, Prior-VAE)
+
+# PARAMS is the grid the phases loop over. run.py reads it as kappa for models 1-2 and as beta for models 3-4.
+if [ "$MODEL_CHOICE" = 3 ] || [ "$MODEL_CHOICE" = 4 ]; then
+    PARAMS=("${BETAS[@]}")
+else
+    PARAMS=("${KAPPAS[@]}")
+fi
+echo "Model ${MODEL_CHOICE}, grid: ${PARAMS[*]}"
 
 # Start the slow Drive restore now, so it overlaps with phase 1. Skip phases 2-5 when they have nothing left to do.
 if eval_phases_needed; then
@@ -45,9 +55,9 @@ fi
 echo "------------------------------------------"
 echo "PHASE 1: Training Models..."
 echo "------------------------------------------"
-for KAPPA in "${KAPPAS[@]}"; do
-    echo "Training model for Parameter: $KAPPA"
-    run_mode 1 "$KAPPA" $LATENT_DIM
+for PARAM in "${PARAMS[@]}"; do
+    echo "Training model for Parameter: $PARAM"
+    run_mode 1 "$PARAM" $LATENT_DIM
 done
 
 # =============================================================================
@@ -57,9 +67,9 @@ echo "------------------------------------------"
 echo "PHASE 2: Generating Evaluation Sets..."
 echo "------------------------------------------"
 wait_restore_eval_set
-for KAPPA in "${KAPPAS[@]}"; do
-    echo "Generating evaluation set for Parameter: $KAPPA"
-    run_mode 2 "$KAPPA" $LATENT_DIM
+for PARAM in "${PARAMS[@]}"; do
+    echo "Generating evaluation set for Parameter: $PARAM"
+    run_mode 2 "$PARAM" $LATENT_DIM
 done
 
 # =============================================================================
@@ -90,9 +100,9 @@ sync_eval_zip no_recon
 echo "------------------------------------------"
 echo "PHASE 4: Generating Corrupted Reconstructions..."
 echo "------------------------------------------"
-for KAPPA in "${KAPPAS[@]}"; do
-    echo "Running robustness inference for Parameter: $KAPPA"
-    run_mode 4 "$KAPPA" $LATENT_DIM
+for PARAM in "${PARAMS[@]}"; do
+    echo "Running robustness inference for Parameter: $PARAM"
+    run_mode 4 "$PARAM" $LATENT_DIM
 done
 
 # =============================================================================
@@ -115,9 +125,9 @@ sync_eval_zip
 echo "------------------------------------------"
 echo "PHASE 6: Running Stochastic Consistency Tests..."
 echo "------------------------------------------"
-for KAPPA in "${KAPPAS[@]}"; do
-    echo "Testing stochastic consistency for Parameter: $KAPPA"
-    run_mode 5 "$KAPPA" $LATENT_DIM
+for PARAM in "${PARAMS[@]}"; do
+    echo "Testing stochastic consistency for Parameter: $PARAM"
+    run_mode 5 "$PARAM" $LATENT_DIM
 done
 
 # =============================================================================
@@ -126,9 +136,9 @@ done
 echo "------------------------------------------"
 echo "PHASE 7: Calculating Standard Free Energy (kappa=0 metric)..."
 echo "------------------------------------------"
-for KAPPA in "${KAPPAS[@]}"; do
-    echo "Evaluating Standard Free Energy for Parameter: $KAPPA"
-    run_mode 7 "$KAPPA" $LATENT_DIM
+for PARAM in "${PARAMS[@]}"; do
+    echo "Evaluating Standard Free Energy for Parameter: $PARAM"
+    run_mode 7 "$PARAM" $LATENT_DIM
 done
 
 echo "=========================================="
