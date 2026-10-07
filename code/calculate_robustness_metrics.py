@@ -22,6 +22,8 @@ from sklearn.metrics import pairwise_distances
 # ==========================================
 parser = argparse.ArgumentParser(description="Calculate Robustness Metrics")
 parser.add_argument("dataset", type=int, choices=[1, 2], help="1 = CelebA, 2 = MNIST")
+parser.add_argument("model", type=int, nargs="?", choices=[1, 2, 3, 4], default=None,
+                    help="1 = CVAE, 2 = Heavy-Tail VAE, 3 = Beta-VAE, 4 = Prior-VAE. Omit to process every model folder.")
 args = parser.parse_args()
 
 DATASET_NAME = "celeba_data" if args.dataset == 1 else "mnist_data"
@@ -30,6 +32,8 @@ LOCAL_EVAL_DIR = '/content/evaluation_dataset'
 DRIVE_ZIP_PATH = os.path.join(BASE_DIR, "evaluation_dataset.zip")
 
 MODEL_DIRS = ['cvae', 'heavy_vae', 'beta_vae', 'prior_vae']
+if args.model is not None:
+    MODEL_DIRS = [MODEL_DIRS[args.model - 1]]
 CORRUPTIONS = ["gaussian_noise", "motion_blur", "fog", "shot_noise"]
 BATCH_SIZE = 32
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")

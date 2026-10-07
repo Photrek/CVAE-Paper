@@ -26,6 +26,8 @@ LATENT_DIM=100
 NUM_SAMPLES=5
 TARGET_DRIVE_DIR="/content/drive/Shareddrives/Photrek & its Partners/Projects/CVAE Paper/celeba_data"
 
+source ./pipeline_lib.sh
+
 KAPPAS=("0" "1e-6" "1e-4" "1e-2" "1e0" "1e1")
 
 # =============================================================================
@@ -36,7 +38,7 @@ echo "PHASE 1: Training Models..."
 echo "------------------------------------------"
 for KAPPA in "${KAPPAS[@]}"; do
     echo "Training model for Parameter: $KAPPA"
-    printf "${DATASET_CHOICE}\n${MODEL_CHOICE}\n${KAPPA}\n${LATENT_DIM}\n${NUM_SAMPLES}\n1\n" | python run.py
+    run_mode 1 "$KAPPA" $LATENT_DIM
 done
 
 # =============================================================================
@@ -45,9 +47,10 @@ done
 echo "------------------------------------------"
 echo "PHASE 2: Generating Evaluation Sets..."
 echo "------------------------------------------"
+restore_eval_set
 for KAPPA in "${KAPPAS[@]}"; do
     echo "Generating evaluation set for Parameter: $KAPPA"
-    printf "${DATASET_CHOICE}\n${MODEL_CHOICE}\n${KAPPA}\n${LATENT_DIM}\n${NUM_SAMPLES}\n2\n" | python run.py
+    run_mode 2 "$KAPPA" $LATENT_DIM
 done
 
 # =============================================================================
@@ -56,13 +59,21 @@ done
 echo "------------------------------------------"
 echo "PHASE 3: Running Post-Processing Scripts..."
 echo "------------------------------------------"
-python calculate_metrics.py ${DATASET_CHOICE}
-python generate_corrupted_images.py ${DATASET_CHOICE}
+if python pipeline_state.py metrics ${DATASET_CHOICE} ${MODEL_CHOICE} ${LATENT_DIM} ${NUM_SAMPLES}; then
+    echo "Standard metrics already computed. Skipping."
+else
+    python calculate_metrics.py ${DATASET_CHOICE} ${MODEL_CHOICE}
+fi
+if python pipeline_state.py corrupt ${DATASET_CHOICE}; then
+    echo "Corruptions already exist. Skipping."
+else
+    python generate_corrupted_images.py ${DATASET_CHOICE}
+fi
 
 # Save originals + corruptions to Drive right away. The corruptions are random, so every model
 # and every session must reuse this one set. Reconstructions are left out (they are rebuilt from the checkpoints).
 echo "Saving originals and corruptions to Google Drive..."
-(cd /content && zip -r -q "${TARGET_DRIVE_DIR}/evaluation_dataset.zip" evaluation_dataset -x "evaluation_dataset/reconstructions*")
+sync_eval_zip no_recon
 
 # =============================================================================
 # PHASE 4: ROBUSTNESS INFERENCE (Mode 4)
@@ -72,7 +83,7 @@ echo "PHASE 4: Generating Corrupted Reconstructions..."
 echo "------------------------------------------"
 for KAPPA in "${KAPPAS[@]}"; do
     echo "Running robustness inference for Parameter: $KAPPA"
-    printf "${DATASET_CHOICE}\n${MODEL_CHOICE}\n${KAPPA}\n${LATENT_DIM}\n${NUM_SAMPLES}\n4\n" | python run.py
+    run_mode 4 "$KAPPA" $LATENT_DIM
 done
 
 # =============================================================================
@@ -81,10 +92,13 @@ done
 echo "------------------------------------------"
 echo "PHASE 5: Aggregating Robustness Metrics..."
 echo "------------------------------------------"
-python calculate_robustness_metrics.py ${DATASET_CHOICE}
+if python pipeline_state.py metrics ${DATASET_CHOICE} ${MODEL_CHOICE} ${LATENT_DIM} ${NUM_SAMPLES} robustness; then
+    echo "Robustness metrics already computed. Skipping."
+else
+    python calculate_robustness_metrics.py ${DATASET_CHOICE} ${MODEL_CHOICE}
+fi
 
-echo "Zipping local evaluation dataset to Google Drive..."
-(cd /content && zip -r -q "${TARGET_DRIVE_DIR}/evaluation_dataset.zip" evaluation_dataset)
+sync_eval_zip
 
 # =============================================================================
 # PHASE 6: STOCHASTIC CONSISTENCY (Mode 5)
@@ -94,7 +108,7 @@ echo "PHASE 6: Running Stochastic Consistency Tests..."
 echo "------------------------------------------"
 for KAPPA in "${KAPPAS[@]}"; do
     echo "Testing stochastic consistency for Parameter: $KAPPA"
-    printf "${DATASET_CHOICE}\n${MODEL_CHOICE}\n${KAPPA}\n${LATENT_DIM}\n${NUM_SAMPLES}\n5\n" | python run.py
+    run_mode 5 "$KAPPA" $LATENT_DIM
 done
 
 # =============================================================================
@@ -105,7 +119,7 @@ echo "PHASE 7: Calculating Standard Free Energy (kappa=0 metric)..."
 echo "------------------------------------------"
 for KAPPA in "${KAPPAS[@]}"; do
     echo "Evaluating Standard Free Energy for Parameter: $KAPPA"
-    printf "${DATASET_CHOICE}\n${MODEL_CHOICE}\n${KAPPA}\n${LATENT_DIM}\n${NUM_SAMPLES}\n7\n" | python run.py
+    run_mode 7 "$KAPPA" $LATENT_DIM
 done
 
 echo "=========================================="

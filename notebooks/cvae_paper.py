@@ -26,8 +26,19 @@ drive.mount('/content/drive')
 # %%
 # %cd "/content/drive/Shareddrives/Photrek & its Partners/Projects/CVAE Paper/code"
 
-# !chmod +x run_celeba.sh
-# !sed -i 's/\r$//' run_celeba.sh
+# !chmod +x *.sh
+# !sed -i 's/\r$//' *.sh
 
 # %%
 # !./run_celeba.sh
+
+
+# %% [markdown]
+# ## Free the GPU
+# The next cell disconnects and deletes the runtime, so it stops using GPU credits once the pipeline ends.
+# Run all cells with it at the end. To get a pop-up when the run finishes, turn on Colab's
+# Tools > Settings > Notifications ("Notify me when long-running executions complete").
+
+# %%
+from google.colab import runtime
+runtime.unassign()

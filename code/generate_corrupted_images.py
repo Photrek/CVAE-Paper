@@ -104,17 +104,22 @@ if __name__ == "__main__":
     for corruption_name in CORRUPTIONS.keys():
         os.makedirs(os.path.join(LOCAL_EVAL_DIR, corruption_name), exist_ok=True)
 
+    # Corruptions are random, so a file that exists is never redone. Only missing files are generated.
+    existing = {name: set(os.listdir(os.path.join(LOCAL_EVAL_DIR, name))) for name in CORRUPTIONS}
+    pending = [p for p in image_paths if any(os.path.basename(p) not in existing[n] for n in CORRUPTIONS)]
+    if not pending:
+        print("All corruptions already exist. Nothing to generate.")
+        raise SystemExit(0)
+
     read_flag = cv2.IMREAD_COLOR if args.dataset == 1 else cv2.IMREAD_UNCHANGED
-    for img_path in tqdm(image_paths, desc="Applying Corruptions"):
+    for img_path in tqdm(pending, desc="Applying Corruptions"):
         filename = os.path.basename(img_path)
         clean_img = cv2.imread(img_path, read_flag)
         if clean_img is None:
             continue
 
         for corruption_name, corruption_func in CORRUPTIONS.items():
-            target_path = os.path.join(LOCAL_EVAL_DIR, corruption_name, filename)
-            if not os.path.exists(target_path):
-                corrupted_img = corruption_func(clean_img)
-                cv2.imwrite(target_path, corrupted_img)
+            if filename not in existing[corruption_name]:
+                cv2.imwrite(os.path.join(LOCAL_EVAL_DIR, corruption_name, filename), corruption_func(clean_img))
 
     print(f"\nAll corrupted datasets generated successfully on local SSD for {DATASET_NAME}!")

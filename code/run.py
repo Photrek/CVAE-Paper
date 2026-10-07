@@ -294,7 +294,7 @@ evaluation_transforms = transforms.Compose([
     transforms.ToTensor()
 ])
 
-if execution_mode in [1, 2, 5, 6]:
+if execution_mode in [1, 2, 5, 6, 7]:
     if dataset_choice == 1:
         # --- CELEBA DATASET ---
         expected_images = 202599
