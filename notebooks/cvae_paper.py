@@ -31,15 +31,16 @@ drive.mount('/content/drive')
 
 # %% [markdown]
 # ## CelebA pipelines
-# `MODEL_CHOICE` picks the model: 1 CVAE, 2 Heavy-Tail VAE, 3 β-VAE, 4 Prior-VAE. `run_celeba.sh` uses the κ grid
-# for models 1-2 and the β grid for models 3-4. Finished steps are skipped, so a done model costs only a few seconds.
+# `DATASET_CHOICE` picks the data (1 CelebA, 2 MNIST, default 1) and `MODEL_CHOICE` picks the model: 1 CVAE,
+# 2 Heavy-Tail VAE, 3 β-VAE, 4 Prior-VAE. `run_pipeline.sh` uses the κ grid for models 1-2 and the β grid for models 3-4.
+# Finished steps are skipped, so a done model costs only a few seconds.
 # A failure in one cell does not stop the next one, since `!` commands do not raise errors in Colab.
 
 # %%
-# !MODEL_CHOICE=2 ./run_celeba.sh
+# !DATASET_CHOICE=1 MODEL_CHOICE=2 ./run_pipeline.sh
 
 # %%
-# !MODEL_CHOICE=3 ./run_celeba.sh
+# !DATASET_CHOICE=1 MODEL_CHOICE=3 ./run_pipeline.sh
 
 
 # %% [markdown]

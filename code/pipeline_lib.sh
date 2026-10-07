@@ -1,5 +1,5 @@
 #!/bin/bash
-# Helpers shared by run_celeba.sh and run_mnist.sh. Source it after setting
+# Helpers for run_pipeline.sh. Source it after setting
 # DATASET_CHOICE, MODEL_CHOICE, NUM_SAMPLES and TARGET_DRIVE_DIR.
 # Every helper skips work that is already finished, so a resumed Colab run does not burn GPU credits.
 # The checks live in pipeline_state.py (standard library only, so they take milliseconds).

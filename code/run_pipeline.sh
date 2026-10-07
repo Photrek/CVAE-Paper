@@ -3,33 +3,53 @@
 # Navigate to the code folder in Google Shared Drive (data folders stay at the project root)
 cd "/content/drive/Shareddrives/Photrek & its Partners/Projects/CVAE Paper/code"
 
-echo "=========================================="
-echo "STARTING FULL AUTOMATED MNIST PIPELINE"
-echo "=========================================="
-
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
-# DATASET_CHOICE:
+# Both choices come from the caller, so no edit is needed to switch:
+#   DATASET_CHOICE=2 MODEL_CHOICE=3 ./run_pipeline.sh
+# DATASET_CHOICE (default 1):
 #   1 = CelebA (128x128 RGB)
 #   2 = MNIST (32x32 Grayscale)
-DATASET_CHOICE=2   
-
-# MODEL_CHOICE:
+# MODEL_CHOICE (default 1):
 #   1 = CVAE (Heavy-Tail MCG + Independent-Equals Scaling)
 #   2 = Heavy-Tail VAE (Heavy-Tail MCG, NO Scaling)
 #   3 = Beta-VAE (Standard Gaussian + Beta KL Weight)
 #   4 = Prior-VAE (Standard Gaussian + Prior Variance 1/sqrt(beta))
-MODEL_CHOICE=1     
+DATASET_CHOICE=${DATASET_CHOICE:-1}
+MODEL_CHOICE=${MODEL_CHOICE:-1}
 
 LATENT_DIM=100
 NUM_SAMPLES=5
-TARGET_DRIVE_DIR="/content/drive/Shareddrives/Photrek & its Partners/Projects/CVAE Paper/mnist_data"
+PROJECT_DIR="/content/drive/Shareddrives/Photrek & its Partners/Projects/CVAE Paper"
+
+BETAS=("1e-1" "5e-1" "1e0" "2e0" "5e0" "1e1")  # models 3-4 (Beta-VAE, Prior-VAE)
+if [ "$DATASET_CHOICE" = 1 ]; then
+    DATASET_NAME="CELEBA"
+    TARGET_DRIVE_DIR="${PROJECT_DIR}/celeba_data"
+    KAPPAS=("0" "1e-6" "1e-4" "1e-2" "1e0" "1e1")  # models 1-2 (CVAE, Heavy-Tail VAE)
+elif [ "$DATASET_CHOICE" = 2 ]; then
+    DATASET_NAME="MNIST"
+    TARGET_DRIVE_DIR="${PROJECT_DIR}/mnist_data"
+    KAPPAS=("0" "1e-6" "1e-4" "1e-2" "1e0" "1e2" "1e4" "1e6")
+else
+    echo "Unknown DATASET_CHOICE=${DATASET_CHOICE} (use 1 for CelebA, 2 for MNIST)."
+    exit 1
+fi
+
+echo "=========================================="
+echo "STARTING AUTOMATED ${DATASET_NAME} PIPELINE"
+echo "=========================================="
 
 source ./pipeline_lib.sh
 
-KAPPAS=("0.0" "1e-6" "1e-4" "1e-2" "1e0" "1e2" "1e4" "1e6")
-PARAMS=("${KAPPAS[@]}")  # eval_phases_needed in pipeline_lib.sh loops over PARAMS
+# PARAMS is the grid the phases loop over. run.py reads it as kappa for models 1-2 and as beta for models 3-4.
+if [ "$MODEL_CHOICE" = 3 ] || [ "$MODEL_CHOICE" = 4 ]; then
+    PARAMS=("${BETAS[@]}")
+else
+    PARAMS=("${KAPPAS[@]}")
+fi
+echo "Model ${MODEL_CHOICE}, grid: ${PARAMS[*]}"
 
 # Start the slow Drive restore now, so it overlaps with phase 1. Skip phases 2-5 when they have nothing left to do.
 if eval_phases_needed; then
@@ -41,26 +61,26 @@ else
 fi
 
 # =============================================================================
-# PHASE 1: MODEL TRAINING (Mode 1, Dim=100)
+# PHASE 1: MODEL TRAINING (Mode 1)
 # =============================================================================
 echo "------------------------------------------"
-echo "PHASE 1: Training 100D Models..."
+echo "PHASE 1: Training Models..."
 echo "------------------------------------------"
-for KAPPA in "${KAPPAS[@]}"; do
-    echo "Training 100D model for Parameter: $KAPPA"
-    run_mode 1 "$KAPPA" $LATENT_DIM
+for PARAM in "${PARAMS[@]}"; do
+    echo "Training model for Parameter: $PARAM"
+    run_mode 1 "$PARAM" $LATENT_DIM
 done
 
 # =============================================================================
-# PHASE 2: GENERATE EVALUATION DATASETS (Mode 2, Dim=100)
+# PHASE 2: GENERATE EVALUATION DATASETS (Mode 2)
 # =============================================================================
 echo "------------------------------------------"
 echo "PHASE 2: Generating Evaluation Sets..."
 echo "------------------------------------------"
 wait_restore_eval_set
-for KAPPA in "${KAPPAS[@]}"; do
-    echo "Generating evaluation set for Parameter: $KAPPA"
-    run_mode 2 "$KAPPA" $LATENT_DIM
+for PARAM in "${PARAMS[@]}"; do
+    echo "Generating evaluation set for Parameter: $PARAM"
+    run_mode 2 "$PARAM" $LATENT_DIM
 done
 
 # =============================================================================
@@ -86,14 +106,14 @@ echo "Saving originals and corruptions to Google Drive..."
 sync_eval_zip no_recon
 
 # =============================================================================
-# PHASE 4: ROBUSTNESS INFERENCE (Mode 4, Dim=100)
+# PHASE 4: ROBUSTNESS INFERENCE (Mode 4)
 # =============================================================================
 echo "------------------------------------------"
 echo "PHASE 4: Generating Corrupted Reconstructions..."
 echo "------------------------------------------"
-for KAPPA in "${KAPPAS[@]}"; do
-    echo "Running robustness inference for Parameter: $KAPPA"
-    run_mode 4 "$KAPPA" $LATENT_DIM
+for PARAM in "${PARAMS[@]}"; do
+    echo "Running robustness inference for Parameter: $PARAM"
+    run_mode 4 "$PARAM" $LATENT_DIM
 done
 
 # =============================================================================
@@ -111,57 +131,53 @@ fi
 sync_eval_zip
 
 # =============================================================================
-# PHASE 6: STOCHASTIC CONSISTENCY (Mode 5, Dim=100)
+# PHASE 6: STOCHASTIC CONSISTENCY (Mode 5)
 # =============================================================================
 echo "------------------------------------------"
 echo "PHASE 6: Running Stochastic Consistency Tests..."
 echo "------------------------------------------"
-for KAPPA in "${KAPPAS[@]}"; do
-    echo "Testing stochastic consistency for Parameter: $KAPPA"
-    run_mode 5 "$KAPPA" $LATENT_DIM
+for PARAM in "${PARAMS[@]}"; do
+    echo "Testing stochastic consistency for Parameter: $PARAM"
+    run_mode 5 "$PARAM" $LATENT_DIM
 done
 
 # =============================================================================
-# PHASE 7: STANDARD FREE ENERGY EVALUATION (Mode 7, Dim=100)
+# PHASE 7: STANDARD FREE ENERGY EVALUATION (Mode 7)
 # =============================================================================
 echo "------------------------------------------"
 echo "PHASE 7: Calculating Standard Free Energy (kappa=0 metric)..."
 echo "------------------------------------------"
-for KAPPA in "${KAPPAS[@]}"; do
-    echo "Evaluating Standard Free Energy for Parameter: $KAPPA"
-    run_mode 7 "$KAPPA" $LATENT_DIM
+for PARAM in "${PARAMS[@]}"; do
+    echo "Evaluating Standard Free Energy for Parameter: $PARAM"
+    run_mode 7 "$PARAM" $LATENT_DIM
 done
 
 # =============================================================================
-# PHASE 8: TRAIN 2D LATENT MODELS (Mode 1, Dim=2)
+# PHASES 8-10 (MNIST only): 2D LATENT MODELS, LATENT MAPS, CLEANUP
 # =============================================================================
-echo "------------------------------------------"
-echo "PHASE 8: Training 2D Models for Latent Space Analysis..."
-echo "------------------------------------------"
-for KAPPA in "${KAPPAS[@]}"; do
-    echo "Training 2D model for Parameter: $KAPPA"
-    run_mode 1 "$KAPPA" 2
-done
+if [ "$DATASET_CHOICE" = 2 ]; then
+    echo "------------------------------------------"
+    echo "PHASE 8: Training 2D Models for Latent Space Analysis..."
+    echo "------------------------------------------"
+    for PARAM in "${PARAMS[@]}"; do
+        echo "Training 2D model for Parameter: $PARAM"
+        run_mode 1 "$PARAM" 2
+    done
 
-# =============================================================================
-# PHASE 9: GENERATE 2D LATENT MAPS / t-SNE PLOTS (Mode 6, Dim=2)
-# =============================================================================
-echo "------------------------------------------"
-echo "PHASE 9: Generating 2D Latent Maps / t-SNE Plots..."
-echo "------------------------------------------"
-for KAPPA in "${KAPPAS[@]}"; do
-    echo "Generating 2D plot for Parameter: $KAPPA"
-    run_mode 6 "$KAPPA" 2
-done
+    echo "------------------------------------------"
+    echo "PHASE 9: Generating 2D Latent Maps / t-SNE Plots..."
+    echo "------------------------------------------"
+    for PARAM in "${PARAMS[@]}"; do
+        echo "Generating 2D plot for Parameter: $PARAM"
+        run_mode 6 "$PARAM" 2
+    done
 
-# =============================================================================
-# PHASE 10: DATASET CLEANUP (Mode 3)
-# =============================================================================
-echo "------------------------------------------"
-echo "PHASE 10: Cleaning Up Extracted Uncompressed Data..."
-echo "------------------------------------------"
-printf "${DATASET_CHOICE}\n${MODEL_CHOICE}\n0.0\n${LATENT_DIM}\n${NUM_SAMPLES}\n3\n" | python run.py
+    echo "------------------------------------------"
+    echo "PHASE 10: Cleaning Up Extracted Uncompressed Data..."
+    echo "------------------------------------------"
+    printf "${DATASET_CHOICE}\n${MODEL_CHOICE}\n${PARAMS[0]}\n${LATENT_DIM}\n${NUM_SAMPLES}\n3\n" | python run.py
+fi
 
 echo "=========================================="
-echo "MNIST PIPELINE COMPLETED SUCCESSFULLY"
+echo "${DATASET_NAME} PIPELINE EXECUTION COMPLETED SUCCESSFULLY"
 echo "=========================================="
