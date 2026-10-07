@@ -50,8 +50,29 @@ def count_pngs(folder):
     return len(glob.glob(os.path.join(folder, "*.png")))
 
 
-def training_done(out_dir, model, param, dim):
-    log_path = os.path.join(out_dir, "epoch_log.txt")
+def model_dir_of(dataset, model):
+    return os.path.join(ROOT, data_name(dataset), MODEL_FOLDERS[model])
+
+
+def run_tag(model, param, dim, samples):
+    return f"{param_str(model, param)}_dim_{dim}_samples_{samples}"
+
+
+def has_free_energy_row(dataset, model, param, dim, samples):
+    """True when standard_free_energy.txt in the model folder has the row of this run."""
+    path = os.path.join(model_dir_of(dataset, model), "standard_free_energy.txt")
+    if not os.path.exists(path):
+        return False
+    with open(path) as f:
+        for line in f.read().splitlines()[1:]:
+            fields = line.split("\t")
+            if len(fields) >= 3 and float(fields[0]) == float(param) and int(fields[1]) == dim and int(fields[2]) == samples:
+                return True
+    return False
+
+
+def training_done(dataset, out_dir, model, param, dim, samples):
+    log_path = os.path.join(model_dir_of(dataset, model), f"epoch_log_{run_tag(model, param, dim, samples)}.txt")
     ckpt_path = os.path.join(out_dir, f"{MODEL_FOLDERS[model]}_{param_str(model, param)}_dim_{dim}_latest.pth")
     if not (os.path.exists(log_path) and os.path.exists(ckpt_path)):
         return False
@@ -73,18 +94,18 @@ def step_done(dataset, model, param, dim, samples, mode):
     run_name = f"{MODEL_FOLDERS[model]}_{tag}_dim_{dim}_samples_{samples}"
     expected = eval_set_size(dataset)
     if mode == 1:
-        return training_done(out_dir, model, param, dim)
+        return training_done(dataset, out_dir, model, param, dim, samples)
     if mode == 2:
         return count_pngs(os.path.join(LOCAL_EVAL, f"reconstructions_{run_name}")) >= expected
     if mode == 4:
         return all(count_pngs(os.path.join(LOCAL_EVAL, f"reconstructions_{c}_{run_name}")) >= expected
                    for c in CORRUPTIONS)
     if mode == 5:
-        return os.path.exists(os.path.join(out_dir, f"stochastic_radii_histogram_kappa_{float(param)}.txt"))
+        return os.path.exists(os.path.join(model_dir_of(dataset, model), f"stochastic_radii_histogram_{run_tag(model, param, dim, samples)}.txt"))
     if mode == 6:
         return os.path.exists(os.path.join(out_dir, f"tsne_plot_kappa_{float(param)}.png"))
     if mode == 7:
-        return os.path.exists(os.path.join(out_dir, f"standard_free_energy_kappa_{float(param)}.txt"))
+        return has_free_energy_row(dataset, model, param, dim, samples)
     return False
 
 
@@ -96,10 +117,10 @@ def corruptions_done(dataset):
 
 def metrics_done(dataset, model, dim, samples, robustness):
     """True when every trained run of this model, at this latent dim, already has its rows in the results file(s)."""
-    model_dir = os.path.join(ROOT, data_name(dataset), MODEL_FOLDERS[model])
+    model_dir = model_dir_of(dataset, model)
     suffix = f"_dim_{dim}_samples_{samples}"
     params = [os.path.basename(p).split("_")[2] for p in glob.glob(os.path.join(model_dir, "outputs_*"))
-              if p.endswith(suffix) and os.path.exists(os.path.join(p, "epoch_log.txt"))]
+              if p.endswith(suffix) and os.path.exists(os.path.join(model_dir, f"epoch_log_{os.path.basename(p)[len('outputs_'):]}.txt"))]
     if not params:
         return False
     files = [f"robustness_results_{c}.txt" for c in CORRUPTIONS] if robustness else ["evaluation_results.txt"]

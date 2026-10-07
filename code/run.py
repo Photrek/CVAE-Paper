@@ -144,6 +144,11 @@ evaluation_originals_dir = os.path.join(local_eval_base, 'originals')
 evaluation_reconstructions_dir = os.path.join(local_eval_base, f'reconstructions_{model_folders[model_choice]}_{param_str}_dim_{latent_dimension}_samples_{number_of_samples}')
 
 
+# Logs and analysis tables of every run sit in the model folder (one level above output_directory), named by the run's
+# parameters, so a plotting program can read them all from one place. pipeline_state.py uses the same names.
+model_data_directory = os.path.abspath(base_output_folder)
+run_tag = f'{param_str}_dim_{latent_dimension}_samples_{number_of_samples}'
+
 os.makedirs(output_directory, exist_ok=True)
 if execution_mode == 2:
     
@@ -916,7 +921,7 @@ def execute_stochastic_consistency_analysis(model, dataset, device, kappa, dimen
     # SAVE TEXT DATA (RADII & HISTOGRAM)
     # ---------------------------------------------------------
     # 1. Save the raw radii to a text file
-    txt_path = os.path.join(output_directory, f"stochastic_radii_kappa_{kappa}.txt")
+    txt_path = os.path.join(model_data_directory, f"stochastic_radii_{run_tag}.txt")
     with open(txt_path, "w") as f:
         f.write("Sample_Index\tMahalanobis_Radius\n")
         for i, radius in enumerate(all_mahalanobis_radii):
@@ -928,7 +933,7 @@ def execute_stochastic_consistency_analysis(model, dataset, device, kappa, dimen
     normalized_freqs = hist_counts / total_samples
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.0
     
-    hist_path = os.path.join(output_directory, f"stochastic_radii_histogram_kappa_{kappa}.txt")
+    hist_path = os.path.join(model_data_directory, f"stochastic_radii_histogram_{run_tag}.txt")
     with open(hist_path, "w") as f:
         f.write("Bin_Center\tNormalized_Frequency\n")
         for i in range(len(hist_counts)):
@@ -1101,11 +1106,26 @@ def execute_standard_free_energy_analysis(model, dataloader, device, kappa, dime
     print(f"  * Avg Standard Recon Loss: {avg_recon:.6f}")
     print(f"  * Avg Standard KL Divergence: {avg_kl:.6f}")
     
-    # Save results to text log
-    txt_path = os.path.join(output_dir, f"standard_free_energy_kappa_{kappa}.txt")
-    with open(txt_path, "w") as f:
-        f.write("Kappa\tStandard_Free_Energy\tStandard_Recon_Loss\tStandard_KL_Divergence\n")
-        f.write(f"{kappa}\t{avg_fe:.6f}\t{avg_recon:.6f}\t{avg_kl:.6f}\n")
+    # One table per model folder with a row per run, sorted from the smallest to the largest parameter.
+    # A rerun of the same run replaces its row.
+    txt_path = os.path.join(model_data_directory, "standard_free_energy.txt")
+    param_name = "Kappa" if model_choice in (1, 2) else "Beta"
+    header = f"{param_name}\tDim\tSamples\tStandard_Free_Energy\tStandard_Recon_Loss\tStandard_KL_Divergence"
+    rows = {}
+    if os.path.exists(txt_path):
+        with open(txt_path) as f:
+            for line in f.read().splitlines()[1:]:
+                fields = line.split("\t")
+                if len(fields) == 6:
+                    rows[(float(fields[0]), int(fields[1]), int(fields[2]))] = fields
+    rows[(float(kappa), int(dimension), int(number_of_samples))] = [
+        str(kappa), str(dimension), str(number_of_samples), f"{avg_fe:.6f}", f"{avg_recon:.6f}", f"{avg_kl:.6f}"]
+    tmp_path = txt_path + ".tmp"
+    with open(tmp_path, "w") as f:
+        f.write(header + "\n")
+        for key in sorted(rows, key=lambda k: (k[1], k[2], k[0])):
+            f.write("\t".join(rows[key]) + "\n")
+    os.replace(tmp_path, txt_path)
     print(f"Saved results to {txt_path}")
     
 
@@ -1160,8 +1180,8 @@ if __name__ == "__main__":
         normalization_constant_a_xz = compute_normalization_constant_term(coupling_kappa, data_space_dimension).to(computation_device)
         
         
-        epoch_log_path = os.path.join(output_directory, "epoch_log.txt")
-        batch_log_path = os.path.join(output_directory, "batch_log.txt")
+        epoch_log_path = os.path.join(model_data_directory, f"epoch_log_{run_tag}.txt")
+        batch_log_path = os.path.join(model_data_directory, f"batch_log_{run_tag}.txt")
 
         # Training restarts at starting_epoch, so rows of later epochs are leftovers of an interrupted run.
         trim_log_to_epoch(epoch_log_path, starting_epoch - 1)
