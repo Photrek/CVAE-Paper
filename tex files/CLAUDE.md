@@ -28,6 +28,7 @@
 - Coupled Gaussian exponent is −(1+κd/2). The coupled log of the density uses the power −1/(1+κd/2).
 - Don't put `\sfrac` in subscripts (it asks for a 3.8 pt font that OT1 lacks). Use `\kappa/a`. Wrap math in section titles with `\texorpdfstring`. Use `[ht!]`, not `[h!]`.
 - Vectors in bold (`\mathbf{x}`, `\boldsymbol{\mu}`). Use `\top` or `\intercal` for transpose, one per equation.
+- Likelihood comparisons across κ use lemma `lemma:common_gaussian_evaluation` (code mode 7), not `lemma:standard_free_energy_coupled_gaussians`. The latter only motivates matched coupling.
 - Proofs go in the appendices as lemmas/theorems with labels. The main text cites them by `\ref`.
 
 ## Figures and tables

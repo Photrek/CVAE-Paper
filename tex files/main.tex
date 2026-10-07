@@ -693,6 +693,8 @@ Algorithm \ref{alg:cvae_stochastic} details the deep tail exploration process. A
 \end{algorithmic}
 \end{algorithm}
 
+To compare the likelihood of models trained with different couplings, we cannot use the loss of each model, because each $\kappa$ defines a different free energy. Evaluating each model's own coupled densities with the standard logarithm (Lemma~\ref{lemma:standard_free_energy_coupled_gaussians}) does not solve this either, because the result depends mostly on the decoder scale fixed at training time. We therefore score every model with the same Gaussian bound on $-\log p(x)$ (Lemma~\ref{lemma:common_gaussian_evaluation}). It keeps the encoder means and scales and the decoder mean of each model, uses a Gaussian prior and posterior, and fits one decoder scale $\sigma_x$ per model by maximum likelihood on the test set. We estimate the reconstruction term with 10 samples per image.
+
 \subsection{Architecture}
 \textcolor{red}{update}
 To empirically evaluate the coupled variational autoencoder, or CVAE, we trained dense neural networks on X of the MNIST hand-written digit data set and convolutional neural networks on Y of the CIFAR image data set and tested them on the hold-out images, along with corrupted versions of those images. The corruptions tested were [list of corruptions]. We varied the $\kappa_{loss}$ from 0, which is the standard loss function, and [list values]. We evaluated the generalized means of the test set losses at -2/3, 0, and 1. [Discuss what each metric tells us about the network performance]. Random seeds were set according to the [microseconds?] up to the runtime point. The networks were trained until [Z] successive epochs without reduction in the evaluation set coupled loss.
@@ -1989,7 +1991,7 @@ q_{\phi}(z|x) = \frac{1}{Z_{q}} \left( 1 + \frac{\kappa}{2} (z - \mu_q)^\top \bo
 \begin{equation}
 p_{\theta}(z) = \frac{1}{Z_{p}} \left( 1 + \frac{\kappa}{2} (z - \mu_p)^\top \boldsymbol{\Sigma}_p^{-1} (z - \mu_p) \right)^{-\frac{1 + \kappa d/2}{\kappa}}.
 \end{equation}
-When evaluating these distributions under the standard logarithmic scale ($\kappa = 0$), the divergence corresponds to the standard Kullback--Leibler divergence:
+When we keep these coupled densities but measure them with the standard logarithm (the $\kappa = 0$ cost), the divergence is the standard Kullback--Leibler divergence:
 \begin{equation}
 \begin{aligned}
 D_{\kappa=0}[q(z|x) \parallel p(z)] &= \mathbb{E}_{z \sim q(z|x)} \left[ \log q(z|x) - \log p(z) \right] \\
@@ -2004,6 +2006,8 @@ and the standard reconstruction loss is:
 \end{equation}
 Because the expectations involve logarithms of quadratic terms integrated over a heavy-tailed density, they do not resolve into a closed algebraic form and require numerical evaluation using Monte Carlo sampling.
 \end{lemma}
+
+Only the logarithm is standard in this lemma. The densities are still each model's own coupled Gaussians, so the value is the standard free energy of a different probabilistic model for each $\kappa$. We use the lemma to show why matched coupling gives a closed form (Section~\ref{sec:cvae}). We do not use it to compare models. The decoder scale is fixed at the identity in every model, and with $\boldsymbol{\Sigma}_{x|z}=\mathbf{I}$ the reconstruction term grows like $\frac{d_d}{2}\log\left(\left(x-\bar{x}_{x|z}\right)^{\intercal}\left(x-\bar{x}_{x|z}\right)\right)$ for $\kappa>0$, as a Gaussian would whose scale is fitted to each image. At $\kappa=0$ the term stays linear in the squared error. The comparison would then mostly measure how far the fixed decoder scale is from the real pixel error, and not the quality of the model. Lemma~\ref{lemma:common_gaussian_evaluation} gives the bound we use to compare models.
 
 \begin{proof}
 We start from the standard definition of Kullback--Leibler divergence between the approximate posterior $q_\phi(z|x)$ and the prior $p_\theta(z)$:
@@ -2042,6 +2046,50 @@ The standard reconstruction loss is the expected negative log-likelihood, $\math
 \mathcal{L}_{\kappa=0}(x) = \mathbb{E}_{z \sim q(z|x)} \left[ \log Z_{x|z} + \frac{1 + \kappa d_d/2}{\kappa} \log \left( 1 + \frac{\kappa}{2} (x - \bar{x}_{x|z})^\top (x - \bar{x}_{x|z}) \right) \right].
 \end{equation}
 \end{proof}
+
+\begin{lemma}[Common Gaussian evaluation bound]
+\label{lemma:common_gaussian_evaluation}
+Take a trained encoder with outputs $\mu_q(x)$ and $\boldsymbol{\Sigma}_q(x)=\operatorname{diag}(\sigma_{q,1}^2,\dots,\sigma_{q,d}^2)$, a trained decoder with mean $\bar{x}_{x|z}$, and the prior location $\mu_p$ and scale $\sigma_p^2\mathbf{I}$ of the model. Score every model, whatever its coupling, with the Gaussian densities
+\begin{equation}
+q(z|x)=\mathcal{N}\left(\mu_q,\boldsymbol{\Sigma}_q\right),\qquad p(z)=\mathcal{N}\left(\mu_p,\sigma_p^2\mathbf{I}\right),\qquad p(x|z)=\mathcal{N}\left(\bar{x}_{x|z},\sigma_x^2\mathbf{I}\right),
+\end{equation}
+where one decoder scale $\sigma_x$ per model maximizes the likelihood of the $N$ evaluation images,
+\begin{equation}
+\label{eq:common_gauss_sigma}
+\sigma_x^2=\frac{1}{N d_d}\sum_{n=1}^{N}\mathbb{E}_{z\sim q(z|x_n)}\left[\left(x_n-\bar{x}_{x|z}\right)^{\intercal}\left(x_n-\bar{x}_{x|z}\right)\right].
+\end{equation}
+Then the average standard free energy over the evaluation set is
+\begin{equation}
+\label{eq:common_gauss_F0}
+\begin{aligned}
+\frac{1}{N}\sum_{n=1}^{N}\mathcal{F}_0(x_n)={}&\frac{d_d}{2}\left(\log\left(2\pi\sigma_x^2\right)+1\right)\\
+&+\frac{1}{2N}\sum_{n=1}^{N}\sum_{i=1}^{d}\left(\frac{\sigma_{q,i}^2+\left(\mu_{q,i}-\mu_p\right)^2}{\sigma_p^2}-1+\log\frac{\sigma_p^2}{\sigma_{q,i}^2}\right),
+\end{aligned}
+\end{equation}
+and each $\mathcal{F}_0(x_n)$ is an upper bound on $-\log p(x_n)$ of the Gaussian generative model $p(z)\,p(x|z)$.
+\end{lemma}
+
+\begin{proof}
+For any density $q(z|x)$, Jensen's inequality gives
+\begin{equation}
+-\log p(x)\leq\mathbb{E}_{q}\left[-\log p(x|z)\right]+D_{KL}\left[q(z|x)\parallel p(z)\right]=\mathcal{F}_0(x),
+\end{equation}
+so the bound holds for the Gaussian $q$ above. The KL divergence between two Gaussians with diagonal covariances gives the second line of Eq.~\eqref{eq:common_gauss_F0}. For the first line, the Gaussian reconstruction loss is
+\begin{equation}
+\mathbb{E}_{q}\left[-\log p(x|z)\right]=\frac{d_d}{2}\log\left(2\pi\sigma_x^2\right)+\frac{1}{2\sigma_x^2}\mathbb{E}_q\left[\left(x-\bar{x}_{x|z}\right)^{\intercal}\left(x-\bar{x}_{x|z}\right)\right].
+\end{equation}
+Averaged over the evaluation set and using Eq.~\eqref{eq:common_gauss_sigma}, the second term becomes
+\begin{equation}
+\frac{1}{2\sigma_x^2 N}\sum_{n=1}^{N}\mathbb{E}_{q}\left[\left(x_n-\bar{x}_{x|z}\right)^{\intercal}\left(x_n-\bar{x}_{x|z}\right)\right]=\frac{N d_d\sigma_x^2}{2\sigma_x^2 N}=\frac{d_d}{2},
+\end{equation}
+which gives the first line. Setting the derivative of this average with respect to $\sigma_x^2$ to zero gives the same $\sigma_x^2$, so it is the maximum-likelihood scale.
+\end{proof}
+
+All models are scored with the same three density families, and the trained networks provide only $\mu_q$, $\boldsymbol{\Sigma}_q$ and $\bar{x}_{x|z}$. The only quantity fitted at evaluation time is the scalar $\sigma_x$, and it is fitted the same way for every model, so no model gains from the arbitrary decoder scale used in training. We use a Gaussian $q$ and not the coupled posterior of each model for two reasons. First, the KL divergence from a coupled Gaussian $q$ with $\kappa\geq1$ to a Gaussian prior is infinite, because the second moment of $q$ diverges and $-\log p(z)$ grows like $\|z\|^2$. Second, for the CVAE the Gaussian $q$ has the same covariance as the distribution the decoder saw during training. The independent-equals distribution has coupling $\tilde{\kappa}=\kappa/(1+\kappa)$ and scale $\boldsymbol{\Sigma}_q/(1+\kappa)$, so its degrees of freedom are $\tilde{\nu}=2/\tilde{\kappa}=2(1+\kappa)/\kappa>2$ and its covariance is
+\begin{equation}
+\frac{\tilde{\nu}}{\tilde{\nu}-2}\,\frac{\boldsymbol{\Sigma}_q}{1+\kappa}=\boldsymbol{\Sigma}_q
+\end{equation}
+for every $\kappa\geq0$. Any $q$ gives a valid bound, so a poor match makes the bound looser but does not make it optimistic. For the Heavy-Tail VAE, trained on samples from $q$ itself, the bound can be looser than for the CVAE. The value of $\sigma_x$ is fitted on the same images it scores. With one parameter and $N d_d$ pixel values this has a negligible effect.
 
 
 

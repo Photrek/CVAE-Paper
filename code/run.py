@@ -1015,118 +1015,83 @@ def generate_tsne_visualization(model, dataloader, device, kappa, output_dir, ma
     
 def execute_standard_free_energy_analysis(model, dataloader, device, kappa, dimension, output_dir, num_mc_samples=10):
     """
-    Evaluates the Standard Free Energy (kappa = 0 cost function) over Coupled Gaussian 
-    posterior and prior distributions using Monte Carlo sampling.
+    Standard (kappa = 0) negative ELBO, scored the same way for every model so the rows can be compared
+    (paper Lemma common_gaussian_evaluation). Only the encoder means and scales and the decoder mean
+    come from the trained model:
+      q(z|x) = N(mu_q, Sigma_q), the encoder's scale used as a covariance. For the CVAE this is the
+               covariance of the independent-equals distribution that training sampled from.
+      p(z)   = N(mu_p, sigma_p^2 I), the model's prior location and scale (sigma_p = 1 except Prior-VAE).
+      p(x|z) = N(x_bar(z), sigma_x^2 I), with one sigma_x per model fitted by maximum likelihood,
+               sigma_x^2 = mean squared pixel error over the evaluation set and the MC samples.
+    The KL has a closed form. The reconstruction term is a Monte Carlo average over z ~ q.
     """
     model.eval()
-    print(f"\n[Mode 7] Computing Standard Free Energy (kappa=0 metric) for kappa={kappa} using {num_mc_samples} MC samples per image...")
-    
+    print(f"\n[Mode 7] Computing the common Gaussian free energy for kappa={kappa} using {num_mc_samples} MC samples per image...")
+
     data_space_dim = input_channels_count * image_size * image_size
-    
-    # Calculate fixed log partition functions
-    log_Z_p = compute_log_partition_function(
-        dimension * torch.log(model.prior_variance), kappa, alpha=2, dimension=dimension
-    ).to(device)
-    
-    log_Z_xz = compute_log_partition_function(
-        0.0, kappa, alpha=2, dimension=data_space_dim
-    ).to(device)
-    
-    total_free_energy = 0.0
+    prior_mean = model.prior_mean.double()
+    prior_variance = model.prior_variance.double()
+
     total_kl_div = 0.0
-    total_recon_loss = 0.0
+    total_squared_error = 0.0
     total_samples_processed = 0
-    
+
     with torch.no_grad():
         for image_batch, _ in tqdm(dataloader, desc="Standard Free Energy Evaluation"):
             image_batch = image_batch.to(device)
             batch_size = image_batch.size(0)
-            
-            # Encode inputs
+
             latent_mean, latent_logvar = model.encode(image_batch)
-            latent_var = torch.exp(latent_logvar)
-            
-            # Compute posterior partition function for each image in batch
-            log_det_posterior = torch.sum(latent_logvar, dim=1)  # Shape: (Batch,)
-            log_Z_q = torch.stack([
-                compute_log_partition_function(log_det_posterior[b], kappa, alpha=2, dimension=dimension)
-                for b in range(batch_size)
-            ]).to(device)
-            
-            # Draw MC samples z ~ q(z|x) using standard sampling (scale_covariance=False)
+
+            # Closed-form KL(N(mu_q, diag var_q) || N(mu_p, sigma_p^2 I)), in float64
+            mean_64 = latent_mean.double()
+            logvar_64 = latent_logvar.double()
+            batch_kl = 0.5 * torch.sum(
+                torch.exp(logvar_64) / prior_variance
+                + (mean_64 - prior_mean) ** 2 / prior_variance
+                - 1.0 + torch.log(prior_variance) - logvar_64,
+                dim=1)
+
+            # Gaussian samples z ~ N(mu_q, diag var_q), whatever kappa the model was trained with
             latent_samples = model.apply_reparameterization_trick(
-                latent_mean, latent_logvar, kappa, dimension, scale_covariance=False, num_samples=num_mc_samples
+                latent_mean, latent_logvar, 0.0, dimension, scale_covariance=False, num_samples=num_mc_samples
             )  # Shape: (Batch, Samples, Latent_Dim)
-            
-            # Decode reconstructed images
             reconstructed_batch = model.decode(latent_samples)  # Shape: (Batch, Samples, C, H, W)
-            
-            # Expand targets and parameters for MC broadcasting
             orig_expanded = image_batch.unsqueeze(1).expand(-1, num_mc_samples, -1, -1, -1)
-            mean_expanded = latent_mean.unsqueeze(1)
-            var_expanded = latent_var.unsqueeze(1)
-            
-            # 1. Quadratic term for Posterior q: (z - mu_q)^T Sigma_q^-1 (z - mu_q)
-            diff_q = latent_samples - mean_expanded
-            quad_q = torch.sum((diff_q ** 2) / var_expanded, dim=-1)  # Shape: (Batch, Samples)
-            
-            # 2. Quadratic term for Prior p: (z - mu_p)^T Sigma_p^-1 (z - mu_p)
-            diff_p = latent_samples - model.prior_mean
-            quad_p = torch.sum((diff_p ** 2) / model.prior_variance, dim=-1)  # Shape: (Batch, Samples)
-            
-            # 3. Quadratic term for Reconstruction x|z: (x - x_bar)^T (x - x_bar)
-            diff_x = orig_expanded - reconstructed_batch
-            quad_recon = torch.sum(diff_x ** 2, dim=(2, 3, 4))  # Shape: (Batch, Samples)
-            
-            # Evaluate logarithmic terms according to Lemma 1
-            if kappa == 0.0:
-                kl_log_terms = 0.5 * (quad_p - quad_q)
-                recon_log_terms = 0.5 * quad_recon
-            else:
-                m_latent = (1.0 + 0.5 * kappa * dimension) / kappa
-                m_data = (1.0 + 0.5 * kappa * data_space_dim) / kappa
-                
-                # The paper's density uses 1 + kappa*Q/2, so the 0.5 sits inside log1p
-                kl_log_terms = m_latent * (torch.log1p(0.5 * kappa * quad_p) - torch.log1p(0.5 * kappa * quad_q))
-                recon_log_terms = m_data * torch.log1p(0.5 * kappa * quad_recon)
-                
-            # Average over Monte Carlo samples
-            mc_kl_terms = torch.mean(kl_log_terms, dim=1)  # Shape: (Batch,)
-            mc_recon_terms = torch.mean(recon_log_terms, dim=1)  # Shape: (Batch,)
-            
-            # Per-image KL, Reconstruction Loss, and Standard Free Energy
-            batch_kl = log_Z_p - log_Z_q + mc_kl_terms
-            batch_recon_loss = log_Z_xz + mc_recon_terms
-            batch_free_energy = batch_recon_loss + batch_kl
-            
+            squared_error = torch.sum((orig_expanded - reconstructed_batch).double() ** 2, dim=(2, 3, 4))  # (Batch, Samples)
+
             total_kl_div += torch.sum(batch_kl).item()
-            total_recon_loss += torch.sum(batch_recon_loss).item()
-            total_free_energy += torch.sum(batch_free_energy).item()
+            total_squared_error += torch.sum(torch.mean(squared_error, dim=1)).item()
             total_samples_processed += batch_size
-            
-    avg_fe = total_free_energy / total_samples_processed
+
+    # Maximum-likelihood decoder variance. With it, the average Gaussian reconstruction loss
+    # (d_d/2) log(2 pi sigma_x^2) + Q / (2 sigma_x^2) becomes (d_d/2) (log(2 pi sigma_x^2) + 1).
+    decoder_variance = total_squared_error / (total_samples_processed * data_space_dim)
+    decoder_sigma = math.sqrt(decoder_variance)
+    avg_recon = 0.5 * data_space_dim * (math.log(2.0 * math.pi * decoder_variance) + 1.0)
     avg_kl = total_kl_div / total_samples_processed
-    avg_recon = total_recon_loss / total_samples_processed
-    
+    avg_fe = avg_recon + avg_kl
+
     print(f"Standard Free Energy Analysis Complete:")
-    print(f"  * Avg Standard Free Energy (kappa=0 metric): {avg_fe:.6f}")
+    print(f"  * Decoder sigma (fitted): {decoder_sigma:.6f}")
+    print(f"  * Avg Standard Free Energy: {avg_fe:.6f}")
     print(f"  * Avg Standard Recon Loss: {avg_recon:.6f}")
     print(f"  * Avg Standard KL Divergence: {avg_kl:.6f}")
-    
+
     # One table per model folder with a row per run, sorted from the smallest to the largest parameter.
     # A rerun of the same run replaces its row.
     txt_path = results_file("standard_free_energy", "standard_free_energy.txt")
     param_name = "Kappa" if model_choice in (1, 2) else "Beta"
-    header = f"{param_name}\tDim\tSamples\tStandard_Free_Energy\tStandard_Recon_Loss\tStandard_KL_Divergence"
+    header = f"{param_name}\tDim\tSamples\tStandard_Free_Energy\tStandard_Recon_Loss\tStandard_KL_Divergence\tDecoder_Sigma"
     rows = {}
     if os.path.exists(txt_path):
         with open(txt_path) as f:
             for line in f.read().splitlines()[1:]:
                 fields = line.split("\t")
-                if len(fields) == 6:
+                if len(fields) == 7:
                     rows[(float(fields[0]), int(fields[1]), int(fields[2]))] = fields
     rows[(float(kappa), int(dimension), int(number_of_samples))] = [
-        str(kappa), str(dimension), str(number_of_samples), f"{avg_fe:.6f}", f"{avg_recon:.6f}", f"{avg_kl:.6f}"]
+        str(kappa), str(dimension), str(number_of_samples), f"{avg_fe:.6f}", f"{avg_recon:.6f}", f"{avg_kl:.6f}", f"{decoder_sigma:.6f}"]
     tmp_path = txt_path + ".tmp"
     with open(tmp_path, "w") as f:
         f.write(header + "\n")
@@ -1262,4 +1227,4 @@ if __name__ == "__main__":
 
 
 
-        
+        
