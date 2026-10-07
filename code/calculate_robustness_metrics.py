@@ -229,7 +229,7 @@ if __name__ == "__main__":
         checkpoint_file = os.path.join(results_folder, "robustness_metrics_checkpoint.json")
         checkpoint_state = load_checkpoint(checkpoint_file)
         
-        param_dirs = glob.glob(os.path.join(model_path, "outputs_*"))
+        param_dirs = glob.glob(os.path.join(model_path, "model_*"))
         param_dirs.sort(key=lambda p: float(os.path.basename(p).split("_")[2]))
         
         for corruption in CORRUPTIONS:
@@ -256,7 +256,7 @@ if __name__ == "__main__":
                         continue
                         
                     # Look for corrupted reconstructions on local SSD first, then Drive
-                    recon_dir = os.path.join(LOCAL_EVAL_DIR, f"reconstructions_{corruption}_{model_name}_{folder_name.replace('outputs_', '')}")
+                    recon_dir = os.path.join(LOCAL_EVAL_DIR, f"reconstructions_{corruption}_{model_name}_{folder_name.replace('model_', '')}")
                     if not os.path.exists(recon_dir):
                         recon_dir = os.path.join(p_dir, f"reconstructions_{corruption}")
                         

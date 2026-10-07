@@ -236,7 +236,7 @@ if __name__ == "__main__":
         fully_processed = get_fully_processed_params(output_results_file)
         checkpoint_state = load_checkpoint(checkpoint_file)
         
-        param_dirs = glob.glob(os.path.join(model_path, "outputs_*"))
+        param_dirs = glob.glob(os.path.join(model_path, "model_*"))
         param_dirs.sort(key=lambda p: float(os.path.basename(p).split("_")[2]))
 
         write_mode = "a" if os.path.exists(output_results_file) else "w"
@@ -255,7 +255,7 @@ if __name__ == "__main__":
                     continue
                     
                 # Look for reconstructions on local SSD first, then Drive output dir
-                recon_dir = os.path.join(LOCAL_EVAL_DIR, f"reconstructions_{model_name}_{folder_name.replace('outputs_', '')}")
+                recon_dir = os.path.join(LOCAL_EVAL_DIR, f"reconstructions_{model_name}_{folder_name.replace('model_', '')}")
                 if not os.path.exists(recon_dir):
                     recon_dir = os.path.join(p_dir, "reconstructions")
                     

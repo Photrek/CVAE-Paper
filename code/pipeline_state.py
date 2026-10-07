@@ -43,7 +43,7 @@ def param_str(model, param):
 
 def output_dir(dataset, model, param, dim, samples):
     return os.path.join(ROOT, data_name(dataset), MODEL_FOLDERS[model],
-                        f"outputs_{param_str(model, param)}_dim_{dim}_samples_{samples}")
+                        f"model_{param_str(model, param)}_dim_{dim}_samples_{samples}")
 
 
 def count_pngs(folder):
@@ -123,8 +123,8 @@ def metrics_done(dataset, model, dim, samples, robustness):
     """True when every trained run of this model, at this latent dim, already has its rows in the results file(s)."""
     model_dir = model_dir_of(dataset, model)
     suffix = f"_dim_{dim}_samples_{samples}"
-    params = [os.path.basename(p).split("_")[2] for p in glob.glob(os.path.join(model_dir, "outputs_*"))
-              if p.endswith(suffix) and os.path.exists(os.path.join(model_dir, "results_epoch_log", f"epoch_log_{os.path.basename(p)[len('outputs_'):]}.txt"))]
+    params = [os.path.basename(p).split("_")[2] for p in glob.glob(os.path.join(model_dir, "model_*"))
+              if p.endswith(suffix) and os.path.exists(os.path.join(model_dir, "results_epoch_log", f"epoch_log_{os.path.basename(p)[len('model_'):]}.txt"))]
     if not params:
         return False
     files = [f"results_robustness/robustness_results_{c}.txt" for c in CORRUPTIONS] if robustness else ["results_evaluation/evaluation_results.txt"]

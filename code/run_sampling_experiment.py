@@ -124,7 +124,7 @@ if __name__ == "__main__":
     def get_kappa_float(dir_path):
         return float(os.path.basename(dir_path).split("_")[2])
         
-    kappa_dirs = sorted(glob.glob(os.path.join(BASE_DIR, "outputs_kappa_*")), key=get_kappa_float)
+    kappa_dirs = sorted(glob.glob(os.path.join(BASE_DIR, "model_kappa_*")), key=get_kappa_float)
     
     with open(OUTPUT_FILE, "w") as f:
         # Strictly tab-separated header, no horizontal dashed lines

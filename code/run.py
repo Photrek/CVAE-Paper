@@ -133,7 +133,7 @@ evaluation_set_size = 10000
 # Directories
 archive_path = os.path.join(base_data_directory, 'img_align_celeba.7z')
 data_directory = os.path.join(base_data_directory, 'img_align_celeba/')
-output_directory = os.path.abspath(os.path.join(base_output_folder, f'outputs_{param_str}_dim_{latent_dimension}_samples_{number_of_samples}'))
+output_directory = os.path.abspath(os.path.join(base_output_folder, f'model_{param_str}_dim_{latent_dimension}_samples_{number_of_samples}'))
 
 # Save image sets on fast local SSD during generation to avoid Drive FUSE bottlenecks
 # Save ALL bulk evaluation image sets on fast local SSD (/content/)
