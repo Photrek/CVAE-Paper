@@ -19,6 +19,9 @@
 % Example of using the package with custom options:
 %
 \usepackage{blindtext}
+% float (also loaded by algorithm) must come before hyperref, which jmlr2e loads.
+% Loaded after it, every figure and table anchor is written twice.
+\usepackage{float}
 \usepackage[abbrvbib, preprint]{jmlr2e}
 %\usepackage{jmlr2e}
 % figures
@@ -50,7 +53,6 @@
 \usepackage[caption=false]{subfig}
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric, arrows, positioning} % Libraries for node shapes, arrows, and relative positioning
-\usepackage{float}
 
 \usepackage{lastpage}
 \usepackage{comment}
@@ -143,7 +145,7 @@ In particular, real-world data often exhibits extreme heavy-tailed behavior, in 
 
 To build machine learning systems capable of robustly learning in extreme environments or datasets, it is necessary to look beyond the classical exponential family. The Rényi and Tsallis entropies, and the Amari $\alpha$-divergence and Wasserstein metric have to date dominated the exploration of cost functions capable of optimizing non-exponential models \citep{kobayashisQVAEDisentangledRepresentation2020,principeInformationTheoreticLearning2010,liRenyiDivergenceVariational2016,amariBackpropagationStochasticGradient1993, tolstikhinWassersteinAutoEncoders2018}.    . Nevertheless these methods are still limited to domains of finite variance \cite{caoCoupledVAEImproved2022}. The $alpha$-divergence function has a discontinuity at $\alpha=1$, which limits its practical utility. The Wasserstein metric has a strong theoretical foundation, but implementations are typically limited to the power 2 case. The Renyi entropy retains the additive information property, while the Tsallis entropy is non-additive. The Tsallis $q$-statistic framework has several misalignments with physical properties that limit its theoretical foundation \citep{nelsonOpenProblemsNonextensive2024}.
 
-Recent breakthroughs in non-equilibrium statistical mechanics have resolved this by demonstrating that the coupled entropy is the unique, universal entropy for complex systems, measuring uncertainty at the informational scale of the maximizing distribution, separating the system's linear scale, the ``known unknowns", from its nonlinear statistical coupling, that is, the ``unknown unknowns" \citep{nelsonUniqueUniversalEntropy2026}. The coupled entropy establishes a delicate balance between the generalized coupled logarithm, which for positive coupling increases the penalty on outliers, and expectations over a modified probability space, the independent-equals distribution, which reduces the outlier samples \citep{al-najafiIndependentApproximatesProvide2026}. The independent-equals expectation acts as a dampener during the training process, ensuring that the training samples have a finite variance that will converge to a computable solution, even when the learned model has undefined variance. Leveraging this unique combination, the coupled entropy can robustly and accurately model extreme heavy-tailed systems.
+Recent breakthroughs in non-equilibrium statistical mechanics have resolved this by demonstrating that the coupled entropy is the unique, universal entropy for complex systems, measuring uncertainty at the informational scale of the maximizing distribution, separating the system's linear scale, the ``known unknowns", from its nonlinear statistical coupling, that is, the ``unknown unknowns" \citep{nelsonUniqueUniversalEntropy2026}. The coupled entropy establishes a delicate balance between the generalized coupled logarithm, which for positive coupling increases the penalty on outliers, and expectations over a modified probability space, the independent-equals distribution, which reduces the outlier samples \citep{al-najafiIndependentApproximatesProvide2026}. The name comes from a counting argument. If $n$ independent copies of a random variable are drawn, the density that all $n$ copies land in the same state $\mathbf{x}$ is $f(\mathbf{x})^n$. A rare state is much less likely to be shared by every copy than a common one, so raising the density to a power and normalizing it moves probability from the tails toward the center. For a system with nonlinear statistical coupling, the power is not an integer. It is the information dimension of a sample (Eq.~\ref{equ_infoDim}), which grows with the coupling, so the independent-equals distribution describes a fractal number of independent random variables in the same state. This fractal count accounts for the long-range dependence between samples of a heavy-tailed system \citep{nelsonUniqueUniversalEntropy2026}. The independent-equals expectation acts as a dampener during the training process, ensuring that the training samples have a finite variance that will converge to a computable solution, even when the learned model has undefined variance. Leveraging this unique combination, the coupled entropy can robustly and accurately model extreme heavy-tailed systems.
 
 \textcolor{red}{include the paper sections.}
 
@@ -393,17 +395,31 @@ and normalizes it. The power $\iota(\kappa,\alpha,d)$ is the information dimensi
 \end{align}
 where the symbol $/^{\iota(\kappa,2,d)}$ is used to indicate the independent-equals distribution. For a discrete variable the integrals become sums over the outcomes. The second independent-equals moment returns the scale matrix $\boldsymbol{\Sigma}$, which for $\kappa>0$ is not the covariance of $f$ (Lemma~\ref{second_moment}). The independent-equals distribution of $f$ is still a coupled Gaussian but with modified coupling, $\tilde{\kappa}=\frac{\kappa}{1+\kappa},$ and scale matrix, $\widetilde{\boldsymbol{\Sigma}}=\frac{\boldsymbol{\Sigma}}{1+\kappa}$. For a diagonal scale matrix, $\boldsymbol{\Sigma}=\operatorname{diag}(\sigma_1^2,\dots,\sigma_d^2)$, this is $\tilde{\sigma}_i=\sigma_i/\sqrt{1+\kappa}$ in each dimension. From these foundations, the coupled entropy for $d-$dimensional distributions with the stretching parameter equal to $2$ for the coupled Gaussian distribution is defined as \citep{nelsonUniqueUniversalEntropy2026}
 
-\begin{equation} \label{CE}
+\begin{align} \label{CE}
 \frac{1}{2}H\left(\mathbf{X};\kappa,2,d\right)^2
-=\int_{\mathbf{x}\in \mathcal{X}}
+&=\int_{\mathbf{x}\in \mathcal{X}}
 f/^{\iota(\kappa,2,d)}(\mathbf{x})
 \ln_{\kappa}{f(\mathbf{x})^{-\frac{1}{1+\kappa d/2}}}
-\,d\mathbf{x},
+\,d\mathbf{x} \nonumber \\
+&=\frac{1}{\kappa}\left(\int_{\mathbf{x}\in \mathcal{X}}
+f/^{\iota(\kappa,2,d)}(\mathbf{x})\,
+f(\mathbf{x})^{-\frac{\kappa}{1+\kappa d/2}}
+\,d\mathbf{x}-1\right) \nonumber \\
+&=\frac{1}{\kappa}\left(\frac{1}{\int_{\mathbf{x}\in \mathcal{X}}f(\mathbf{x})^{\iota(\kappa,2,d)}\,d\mathbf{x}}-1\right),
+\end{align}
+for $\kappa>-\frac{2}{2+d}$, the range where the coupled entropy is concave. The second line writes out the coupled logarithm of Eq.~\ref{coupledLog}. The third line shows how the two components balance. The coupled logarithm raises the density to the power $-\kappa/(1+\kappa d/2)$, which is the negative of the extra power $\iota(\kappa,2,d)-1$ carried by the independent-equals distribution. Their product is $f$ itself, which integrates to one, so the coupled entropy depends on $f$ only through the normalization of its independent-equals distribution. That normalization is finite for every $\kappa>0$, even when $f$ has no finite variance. As $\kappa\to0$, $\int f^{1+\kappa}d\mathbf{x}\approx 1+\kappa\int f\ln f\,d\mathbf{x}$, and the right side becomes the Boltzmann-Gibbs-Shannon entropy $-\int f\ln f\,d\mathbf{x}$.
+
+Two properties of the coupled entropy carry over to the free energy built from it. The first is how it combines across systems. For two independent systems $A$ and $B$ the probabilities multiply, and the coupled logarithm turns a product into a coupled sum,
+\begin{equation} \label{coupledSum}
+\ln_\kappa(xy)=\ln_\kappa x \oplus_\kappa \ln_\kappa y,
+\qquad
+u\oplus_\kappa v \equiv u+v+\kappa uv .
 \end{equation}
-for $\kappa>-\frac{2}{2+d}$, the range where the coupled entropy is concave. At $\kappa=0$ the right side is the Boltzmann-Gibbs-Shannon entropy.
+The coupled entropy of the joint system follows the same rule, so $\frac{1}{2}H^2$ of $A$ and $B$ together is the coupled sum of $\frac{1}{2}H^2$ for $A$ and for $B$ \citep{nelsonUniqueUniversalEntropy2026}. At $\kappa=0$ the coupled sum is ordinary addition, and we recover the additivity of the Boltzmann-Gibbs-Shannon entropy. For $\kappa\neq0$ the cross term $\kappa uv$ holds the nonlinear interaction between the two systems. The coupled entropy is then not additive, but it still combines by a fixed rule set by $\kappa$ alone. The second property is extensivity. Consider a system of $W(N)$ equally likely states, where $N$ counts its degrees of freedom. When the number of states grows at the rate set by the coupling, $W(N)\sim\exp_\kappa\left(\frac{1}{2}N^2\right)^{1+\kappa d/2}$, the coupled entropy grows in proportion to the degrees of freedom, $H/N\to1$ as $N\to\infty$ \citep{nelsonUniqueUniversalEntropy2026}. For $\kappa=0$ this is the usual extensivity of entropy for exponential growth of states. For $\kappa\neq0$ the Boltzmann-Gibbs-Shannon entropy of the same system does not grow in proportion to $N$, because it mixes the nonlinear fluctuations into the count. Extensivity is what lets the coupled entropy measure the degrees of freedom at the informational scale, separate from the coupling.
+
 The coupled entropy establishes the foundation for the coupled free energy function for variational inference, which is introduced next.
 
-\section{The Coupled VAE}
+\section{The Coupled VAE} \label{sec:cvae}
 The Coupled VAE \citep{caoCoupledVAEImproved2022} applies the coupled information functions to a generalization of the negative ELBO or free energy which can be used to modify how the variational method weights the relative importance of samples in the tail of the data distribution. In this paper, we report on a dramatic expansion of the range of heavy-tailed latent distributions that can be stably trained within an VAE architecture. The expanded capability is achieved by sampling from the independent-equals modification to the latent posterior distribution $q/^{\iota(\kappa,2,d)}(z \mid x)$, thereby guaranteeing samples with a finite variance even when the tail shape of the latent distribution goes to infinity. The relationship between a coupled Gaussian and its independent-equals modification is shown in Figure \ref{FigIndependentEquals}. As shown in Lemma~\ref{Normalization} (see Appendix~B), 
 the independent-equals transformation of a multivariate coupled Gaussian remains within the coupled Gaussian family, with updated coupling parameter 
 $\tilde{\kappa}=\frac{\kappa}{1+\kappa}$
@@ -413,9 +429,9 @@ $\widetilde{\boldsymbol{\Sigma}}_q = \boldsymbol{\Sigma}_q/(1+\kappa)$.
 \begin{figure}[ht]
     \centering
     \includegraphics[width=1.0\linewidth]{Fig_Independent_equals_sigma.pdf}
-    \caption{\textbf{Independent-equals Distributions.} The plots show coupled Gaussians (solid) and their complementary independent-equals distributions (dashed) for unitary scale $(\Sigma_q=1)$, zero mean ($\mu = 0$) and $\kappa=\{10^{-6}, 10^0, 10^6\}.$ The independent-equals coupled Gaussian has a modified coupling 
+    \caption{\textbf{Independent-equals Distributions.} \textcolor{red}{Since we are only using one value of kappa, it should not have a subscript q.} The plots show coupled Gaussians (solid) and their complementary independent-equals distributions (dashed) for unitary scale $(\Sigma_q=1)$, zero mean ($\mu = 0$) and $\kappa=\{10^{-6}, 10^0, 10^6\}.$ The independent-equals coupled Gaussian has a modified coupling 
     $\tilde{\kappa} = \kappa/(1+\kappa) \approx\{10^{-6},\frac{1}{2}, 1 \}$ 
-    and scale $\tilde{\Sigma}_q = \Sigma_q/(1+\kappa)\approx\{1,\frac{1}{2}, 10^{-6}\}.$  a) Linear-log axes, and b) log-log axes. For small values of coupling, the modification is negligible, but the deviations become significant for large coupling. The coupled Gaussian approximates a Gaussian for $x\ll \sqrt{2/\kappa}$ and a pure power-law for $x\gg \sqrt{2/\kappa}.$ See Theorem \ref{thm:bending_surface_d_dim} for a proof of the transition point separating Gaussian and power-law behavior.}
+    and scale $\tilde{\Sigma}_q \approx \Sigma_q/(1+\kappa)=\{1,\frac{1}{2}, \times 10^{-6}\}.$  a) Linear-log axes, and b) log-log axes. For small values of coupling, the modification is negligible, but the deviations become significant for large coupling. The coupled Gaussian approximates a Gaussian for $x\ll \sqrt{2/\kappa}$ and a pure power-law for $x\gg \sqrt{2/\kappa}.$ See Theorem \ref{thm:bending_surface_d_dim} for a proof of the transition point separating Gaussian and power-law behavior.}
     \label{FigIndependentEquals}
 \end{figure}
 
@@ -496,8 +512,6 @@ the normalization constant can be absorbed inside the exponential. Specifically,
 \right).
 \]
 
-Since we are particularly interested in the performance in tails of the distributions, we do not assume that one sample of z and x per input is adequate. 
-
 The coupled free energy with matching coupled Gaussian  distributions simplifies to 
 \begin{align}
 \mathcal{F}_{\theta,\phi,\kappa}(\mathbf{x})
@@ -513,11 +527,11 @@ p_\theta(\mathbf{z})^{-\frac{1}{1+\kappa d/2}}\right) - \ln_{\kappa}
 
 The full derivation and simplified expression are provided in Theorem~\ref{theorem_CFE} (Appendix~B).
 
-The coupled logarithm of a coupled Gaussian, which occurs several times within the coupled ELBO function, simplifies to
+The closed form rests on one identity. The coupled logarithm is the inverse of the coupled exponential,
 \begin{equation}
 \ln_{\kappa}\left(\exp_\kappa(y)\right)=y,
 \end{equation}
-and therefore
+and since the coupled Gaussian raises the coupled exponential to the power $-(1+\kappa d/2)$, its coupled logarithm with the power $-1/(1+\kappa d/2)$ also returns the argument,
 \begin{equation}
 \ln_{\kappa}
 \left[
@@ -528,14 +542,17 @@ and therefore
 =
 y.
 \end{equation}
+Every density in the Coupled Free Energy is a coupled Gaussian with the same $\kappa$ as the metric, so each coupled logarithm reduces to a quadratic form plus a constant from the partition function, combined by the coupled sum of Eq.~\ref{coupledSum}. The coupled divergence then becomes a sum of Mahalanobis distances, trace terms and partition-function terms, all computed directly from the encoder outputs. The coupled reconstruction loss becomes an affine function of the squared error between the input and the decoder output.
 
-The simple algebraic form in Theorem~\ref{theorem_CFE} depends on using the same coupling value for both the free energy metric and the probability distributions. Matching these parameters allows the coupled logarithm to undo the exponent of the coupled Gaussian. If instead we evaluate heavy-tailed distributions using the standard free energy metric ($\kappa = 0$), this cancellation does not occur. As shown in Lemma~\ref{lemma:standard_free_energy_coupled_gaussians}, the standard logarithm leaves quadratic terms bound inside logarithmic functions. The resulting integral over the heavy-tailed density cannot be simplified into basic algebra, requiring numerical approximations like Monte Carlo sampling to compute the loss during training.
+This simplification needs the coupling of the metric to match the coupling of the distributions. If we instead evaluate coupled Gaussians with the standard free energy ($\kappa = 0$), the logarithm does not undo the coupled exponential. Lemma~\ref{lemma:standard_free_energy_coupled_gaussians} shows that the quadratic forms then stay inside logarithms, and their average over the heavy-tailed density has no closed form. Every term of the loss would need its own Monte Carlo estimate, which adds noise to each gradient step. With matched coupling, the only average left to estimate numerically is the reconstruction loss over the latent samples, because it passes through the decoder network. Section~\ref{sec:methods} describes how we estimate it.
 
-\section{Experimental Methods}
+\section{Experimental Methods} \label{sec:methods}
 
 The experiments evaluate the Coupled Variational Autoencoder (CVAE) across standard image datasets (CelebA and MNIST) and extreme financial data (cryptocurrency daily log-returns). The primary purpose is to build a generative model capable of learning in extreme environments where the data exhibits heavy tails and diverging first or second moments. To build a robust model, the CVAE uses the Coupled Free Energy loss function, which enables the neural network's decoder to act as a nonlinear amplifier, processing compact, stable latent vectors and projecting them into extreme, heavy-tailed data outputs.
 
-It is important to consider that heavy-tailed distributions are non-ergodic, meaning that a single random sample rarely reflects the system's true average behavior. To account for this, the numerical computation of the Coupled Free Energy requires an ensemble approach. For each input, the model generates a summation of $S$ different samples. The loss is then averaged across these samples and the batch before updating the network weights using standard backpropagation. Future research may improve training efficiency by using the natural gradients of the coupled exponential family.
+The coupled divergence is computed in closed form from the encoder outputs and needs no samples. The coupled reconstruction loss is an average over the independent-equals posterior of a quantity that passes through the decoder, so we estimate it by Monte Carlo. For each input, we draw $S$ latent samples from $q_\phi/^{\iota(\kappa,2,d)}(\mathbf{z}\mid\mathbf{x})$, decode each one, and compute its reconstruction loss in closed form from the decoder output, so $\mathbf{x}$ itself is not sampled. The loss is averaged over the $S$ samples and the batch before the weights are updated by backpropagation.
+
+More than one sample per input matters more here than in a standard VAE, because heavy-tailed systems are non-ergodic. The loss we want is an ensemble average over the posterior. Training replaces it with an average over the few draws seen in each step, and over many steps, as if it were a time average. For a light-tailed posterior the two agree quickly, so one draw per step is enough and the error averages out across steps. For a heavy-tailed posterior they do not. Rare draws far in the tail carry a large share of the ensemble average, and a short run of draws usually misses them, so the running average stays away from the ensemble value for a long time. For a coupled Gaussian with $\kappa \geq 1$ the variance diverges, and the sample average of the squared deviations never settles. The independent-equals posterior restores a finite variance for every $\kappa$, but its coupling $\kappa/(1+\kappa)$ still rises toward one as $\kappa$ grows, so its tails get heavier and the averages converge more slowly. The coupled logarithm places its largest penalty on the rare samples that land in those tails. With one draw per input, most steps miss the tail, and the few that hit it dominate the gradient. Averaging $S$ draws divides the variance of the estimate by $S$ and lets each step see the tail more often, which is where the coupled free energy differs from the standard one. We use $S = 5$ for both CelebA and MNIST. Future research may improve training efficiency by using the natural gradients of the coupled exponential family.
 
 In algorithm \ref{alg:cvae_training} we detail the core logic of the model. During Phase 1, the model trains using the independent-equals expectation. This reduces the variance of the latent space, keeping the neural network numbers small and stable to prevent numerical collapse. During Phase 2, this safety scaling is removed. It is crucial to drop the scaling during inference because physical reality, such as extreme financial volatility, follows the original heavy-tailed distribution. By drawing samples directly from the unscaled distribution, we force the model to prove it can genuinely generate the extreme data events it learned to map during training.
 
@@ -560,7 +577,7 @@ In algorithm \ref{alg:cvae_training} we detail the core logic of the model. Duri
         \State $\tilde{\sigma}_q \leftarrow \frac{\sigma_q}{\sqrt{1+\kappa}}$
         \Statex
         \State Initialize batch loss $\mathcal{F}_{batch} \leftarrow 0$
-        \State \Comment{Draw $S$ samples per input to overcome nonergodicity}
+        \State \Comment{Draw $S$ samples per input: one sample does not represent the ensemble (non-ergodic)}
         \For{$s = 1, \dots, S$}
             \State \Comment{Sample $d$-dimensional noise using scaled parameters}
             \State Draw $\epsilon_s \sim \text{MCG}(\tilde{\kappa}, I_d)$ 
@@ -687,7 +704,7 @@ The dense neural network architectures were [discuss layers, parameters, make an
        
 \section{Results} 
 
-In this section, we show the initial results of the CVAE performance. To train the model, we consider the CelebA dataset (CelebFaces Attributes Dataset), a widely used dataset for computer vision tasks involving human faces. This data set contains $202,599$ images of celebrity faces with high variability and visual richness, making it an ideal benchmark for learning complex data distributions and testing the performance of generative models. For testing purposes, we use an image size of $128\times128$ (original images are $178\times178$), a batch size of $64$ images, a learning rate of $ 5\times10^ {-4}$, and a latent dimension of $d =100$.
+In this section, we show the initial results of the CVAE performance. To train the model, we consider the CelebA dataset (CelebFaces Attributes Dataset), a widely used dataset for computer vision tasks involving human faces. This data set contains $202,599$ images of celebrity faces with high variability and visual richness, making it an ideal benchmark for learning complex data distributions and testing the performance of generative models. For testing purposes, we use an image size of $128\times128$ (original images are $178\times178$), a batch size of $64$ images, a learning rate of $ 5\times10^ {-4}$, a latent dimension of $d =100$, and $S = 5$ latent samples per input.
 
 \begin{figure}[ht!]
         \centering
@@ -1205,8 +1222,8 @@ Research on the Coupled Variational Autoencoder conducted between 2020 and 2023 
 \section*{Appendices}
 \appendix
 
-\section[First-order equivalence between the beta-VAE model and prior variance as a hyperparameter]
-{First-order equivalence between the $\boldsymbol{\beta}$-VAE model and the prior variance as a hyperparameter}
+\section[Second-order equivalence between the beta-VAE model and prior variance as a hyperparameter]
+{Second-order equivalence between the $\boldsymbol{\beta}$-VAE model and the prior variance as a hyperparameter}
 
 In this appendix, we establish that, under a small-deviation regime, the effect of the $\beta$ coefficient in the $\beta$-VAE objective can be equivalently interpreted as a rescaling of the prior variance. We consider the one-dimensional case; the multivariate diagonal case follows by separability. Since $\beta$ is a multiplicative factor on the Kullback-Leibler divergence between the latent posterior and prior distributions, we focus on that portion of the ELBO. In this analysis the coupling is zero.
 
@@ -1226,7 +1243,7 @@ Consider the $\beta$-weighted Kullback–Leibler divergence, $\beta D(q_\beta\|p
 \qquad
 \sigma_{q,\beta}^2 = 1 + \epsilon_\beta,
 \]
-with $|\epsilon| \ll 1$ and $|\epsilon_\beta| \ll 1$. Then, to leading nontrivial order, the equivalence
+with $|\epsilon| \ll 1$ and $|\epsilon_\beta| \ll 1$. Expand both divergences in powers of $\epsilon$ and $\epsilon_\beta$. The first-order terms cancel, so we keep terms up to second order. Then the equivalence
 \[
 \beta D(q_\beta\|p_\beta) = D(q\|p)
 \]
@@ -1339,12 +1356,14 @@ we obtain the leading-order relation
 \sigma_p^2 \approx \frac{1}{\sqrt{\beta}}.
 \]
 
-This establishes the first-order equivalence between the $\beta$ coefficient and the prior variance.
+This establishes the equivalence between the $\beta$ coefficient and the prior variance to second order in the deviations.
 \end{proof}
 
 The result extends component-wise to diagonal multivariate Gaussians. In the case of full covariance matrices, the equivalence corresponds to an isotropic rescaling $\boldsymbol{\Sigma}_p \mapsto \boldsymbol{\Sigma}_p / \sqrt{\beta}$ under the same small-deviation assumptions.
 
-That result shows that the beta-VAE performance can be obtained with a standard VAE with prior variance $    \sigma_p^2 = \frac{1}{\sqrt{\beta}}$. Therefore, the effects of adding the hyperparameter $\beta$ can be obtained just by tuning the prior variance.
+Lemma~\ref{lemma:beta_prior_equivalence} shows that, near the prior, a $\beta$-VAE behaves like a standard VAE with prior variance $\sigma_p^2 \approx 1/\sqrt{\beta}$. Tuning $\beta$ therefore has the same effect as tuning the prior variance, and Figures~\ref{Fig_beta_epochs.png} and \ref{Fig_beta_stationary.png} confirm this numerically. Both changes act on the scale of a Gaussian. Neither changes the shape of its tails, so neither lets the model represent rare, extreme events.
+
+This is why the CVAE changes the distribution family, and with it the way latent samples are drawn, instead of adding a weight to the loss (Section~\ref{sec:cvae}). The CVAE uses coupled Gaussians with coupling $\kappa$ for the latent and data distributions. For $\kappa \geq 1$ a coupled Gaussian has no finite variance, so a latent sample drawn directly from the posterior can be arbitrarily large, and a loss averaged over such samples does not settle during training. The $\beta$-VAE does not face this problem because its Gaussian posterior always has finite variance, but for the same reason it cannot reach the heavy-tailed regime. The CVAE draws its training samples from the independent-equals posterior $q_\phi/^{\iota(\kappa,2,d)}(\mathbf{z}\mid\mathbf{x})$ instead. This is again a coupled Gaussian, with coupling $\kappa/(1+\kappa) < 1$ and scale matrix $\boldsymbol{\Sigma}_q/(1+\kappa)$ (Lemma~\ref{Normalization}), so its variance is finite for every $\kappa$ and training stays stable as $\kappa$ grows. The coupled logarithm in the Coupled Free Energy balances this choice by placing a larger penalty on low-probability events (Eq.~\ref{CE}), so the loss stays sensitive to the tails that the sampling suppresses.
 
 
 

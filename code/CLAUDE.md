@@ -27,7 +27,7 @@ Metric tables in `tex files/main.tex` are copied from `evaluation_results.txt` a
 - **κ convention:** `run.py` uses the paper's κ everywhere. The density is (1 + κQ/2)^−(1+κd/2)/κ, Z follows Eq. `partitionFunctionCoupledGaussian`, the sampler uses ν = 2/κ, and the domain is κ > −2/d. Don't bring back the 2κ form.
 - Shared hyperparameters in `run.py`: Adam lr 5e-4, batch 64, 5 epochs, α=2, prior N(0,1), eval set 10,000 images, seed 42, no gradient clipping, no LR scheduler.
 - CelebA: latent dim 100, S=5, κ ∈ {0, 1e-6, 1e-4, 1e-2, 1, 10}. All CelebA outputs were deleted (κ = 0 too, so every row uses the same loader and code). Everything must be rerun. `run_celeba.sh` currently has `MODEL_CHOICE=1` (cvae). Switch to 2 for the heavy_vae rerun.
-- MNIST: latent dim 100 and 2, S=1, κ ∈ {0, 1e-6, 1e-4, 1e-2, 1, 1e2, 1e4, 1e6}.
+- MNIST: latent dim 100 and 2, S=5 (changed from 1 on 2026-10-06 to match CelebA and the paper), κ ∈ {0, 1e-6, 1e-4, 1e-2, 1, 1e2, 1e4, 1e6}.
 
 ## Other files
 - `run_sampling_experiment.py` imports from `run.py` with a fake-stdin hack and a hard-coded non-Colab data path. Its fake answers predate the dataset/model prompts, so it is stale.

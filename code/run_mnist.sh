@@ -23,7 +23,7 @@ DATASET_CHOICE=2
 MODEL_CHOICE=1     
 
 LATENT_DIM=100
-NUM_SAMPLES=1
+NUM_SAMPLES=5
 TARGET_DRIVE_DIR="/content/drive/Shareddrives/Photrek & its Partners/Projects/CVAE Paper/mnist_data"
 
 KAPPAS=("0.0" "1e-6" "1e-4" "1e-2" "1e0" "1e2" "1e4" "1e6")
