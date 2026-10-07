@@ -228,8 +228,10 @@ if __name__ == "__main__":
         print(f"PROCESSING MODEL: {model_name.upper()}")
         print(f"==========================================")
         
-        output_results_file = os.path.join(model_path, "evaluation_results.txt")
-        checkpoint_file = os.path.join(model_path, "metrics_checkpoint.json")
+        results_folder = os.path.join(model_path, "results_evaluation")
+        os.makedirs(results_folder, exist_ok=True)
+        output_results_file = os.path.join(results_folder, "evaluation_results.txt")
+        checkpoint_file = os.path.join(results_folder, "metrics_checkpoint.json")
         
         fully_processed = get_fully_processed_params(output_results_file)
         checkpoint_state = load_checkpoint(checkpoint_file)

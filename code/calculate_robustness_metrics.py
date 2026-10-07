@@ -224,7 +224,9 @@ if __name__ == "__main__":
         print(f"EVALUATING ROBUSTNESS FOR MODEL: {model_name.upper()}")
         print(f"==========================================")
         
-        checkpoint_file = os.path.join(model_path, "robustness_metrics_checkpoint.json")
+        results_folder = os.path.join(model_path, "results_robustness")
+        os.makedirs(results_folder, exist_ok=True)
+        checkpoint_file = os.path.join(results_folder, "robustness_metrics_checkpoint.json")
         checkpoint_state = load_checkpoint(checkpoint_file)
         
         param_dirs = glob.glob(os.path.join(model_path, "outputs_*"))
@@ -232,7 +234,7 @@ if __name__ == "__main__":
         
         for corruption in CORRUPTIONS:
             print(f"\n  --- Processing Corruption: {corruption.upper()} ---")
-            output_results_file = os.path.join(model_path, f"robustness_results_{corruption}.txt")
+            output_results_file = os.path.join(results_folder, f"robustness_results_{corruption}.txt")
             fully_processed = get_fully_processed_params(output_results_file)
             
             if corruption not in checkpoint_state:

@@ -127,7 +127,7 @@ def metrics_done(dataset, model, dim, samples, robustness):
               if p.endswith(suffix) and os.path.exists(os.path.join(model_dir, "results_epoch_log", f"epoch_log_{os.path.basename(p)[len('outputs_'):]}.txt"))]
     if not params:
         return False
-    files = [f"robustness_results_{c}.txt" for c in CORRUPTIONS] if robustness else ["evaluation_results.txt"]
+    files = [f"results_robustness/robustness_results_{c}.txt" for c in CORRUPTIONS] if robustness else ["results_evaluation/evaluation_results.txt"]
     for name in files:
         path = os.path.join(model_dir, name)
         if not os.path.exists(path):
