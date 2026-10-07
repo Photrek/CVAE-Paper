@@ -5,7 +5,7 @@
   1. CelebA cvae: `run_celeba.sh` as is (`MODEL_CHOICE=1`, grid now includes κ = 0). Started on Colab L4, 2026-10-06. Resume restores the RNG state, and the corruption set is shared through `celeba_data/evaluation_dataset.zip`.
   2. CelebA heavy_vae: set `MODEL_CHOICE=2` and run again.
   3. MNIST cvae, d = 100 and d = 2: `run_mnist.sh` with S = 5 (`mnist_data/` is empty, so this is a fresh run).
-  4. Check each `epoch_log_<run>.txt` (model folder) for `nan` rows, then copy the new numbers into the CelebA metric and robustness tables in `main.tex`, and redo `Fig_Energy.pdf` and `cvae_celeba_metrics_*.pdf` if they use κ > 0 runs.
+  4. Check each `epoch_log_<run>.txt` (`results_epoch_log/` in the model folder) for `nan` rows, then copy the new numbers into the CelebA metric and robustness tables in `main.tex`, and redo `Fig_Energy.pdf` and `cvae_celeba_metrics_*.pdf` if they use κ > 0 runs.
 - Done 2026-10-06: resume/skip optimization (`code/pipeline_state.py`, `code/pipeline_lib.sh`). Tested on Colab (CelebA cvae): finished steps skip, and a fully done pipeline finishes in minutes.
 - CelebA tables list κ up to 10⁶ plus a zoom grid (10^±0.5, 10^±1.5). `run_celeba.sh` only runs {0, 1e-6, 1e-4, 1e-2, 1, 10}. This will be updated later, after the reruns.
 - Rewrite the stale "Architecture" subsection (it mentions TensorFlow, CIFAR and dense nets). The CNN description in Results is the correct one.

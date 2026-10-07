@@ -149,6 +149,13 @@ evaluation_reconstructions_dir = os.path.join(local_eval_base, f'reconstructions
 model_data_directory = os.path.abspath(base_output_folder)
 run_tag = f'{param_str}_dim_{latent_dimension}_samples_{number_of_samples}'
 
+
+def results_file(result_type, file_name):
+    """Path of a table inside <model folder>/results_<result_type>/ (the folder is created)."""
+    folder = os.path.join(model_data_directory, f"results_{result_type}")
+    os.makedirs(folder, exist_ok=True)
+    return os.path.join(folder, file_name)
+
 os.makedirs(output_directory, exist_ok=True)
 if execution_mode == 2:
     
@@ -921,7 +928,7 @@ def execute_stochastic_consistency_analysis(model, dataset, device, kappa, dimen
     # SAVE TEXT DATA (RADII & HISTOGRAM)
     # ---------------------------------------------------------
     # 1. Save the raw radii to a text file
-    txt_path = os.path.join(model_data_directory, f"stochastic_radii_{run_tag}.txt")
+    txt_path = results_file("stochastic_radii", f"stochastic_radii_{run_tag}.txt")
     with open(txt_path, "w") as f:
         f.write("Sample_Index\tMahalanobis_Radius\n")
         for i, radius in enumerate(all_mahalanobis_radii):
@@ -933,7 +940,7 @@ def execute_stochastic_consistency_analysis(model, dataset, device, kappa, dimen
     normalized_freqs = hist_counts / total_samples
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.0
     
-    hist_path = os.path.join(model_data_directory, f"stochastic_radii_histogram_{run_tag}.txt")
+    hist_path = results_file("stochastic_radii_histogram", f"stochastic_radii_histogram_{run_tag}.txt")
     with open(hist_path, "w") as f:
         f.write("Bin_Center\tNormalized_Frequency\n")
         for i in range(len(hist_counts)):
@@ -1108,7 +1115,7 @@ def execute_standard_free_energy_analysis(model, dataloader, device, kappa, dime
     
     # One table per model folder with a row per run, sorted from the smallest to the largest parameter.
     # A rerun of the same run replaces its row.
-    txt_path = os.path.join(model_data_directory, "standard_free_energy.txt")
+    txt_path = results_file("standard_free_energy", "standard_free_energy.txt")
     param_name = "Kappa" if model_choice in (1, 2) else "Beta"
     header = f"{param_name}\tDim\tSamples\tStandard_Free_Energy\tStandard_Recon_Loss\tStandard_KL_Divergence"
     rows = {}
@@ -1180,8 +1187,8 @@ if __name__ == "__main__":
         normalization_constant_a_xz = compute_normalization_constant_term(coupling_kappa, data_space_dimension).to(computation_device)
         
         
-        epoch_log_path = os.path.join(model_data_directory, f"epoch_log_{run_tag}.txt")
-        batch_log_path = os.path.join(model_data_directory, f"batch_log_{run_tag}.txt")
+        epoch_log_path = results_file("epoch_log", f"epoch_log_{run_tag}.txt")
+        batch_log_path = results_file("batch_log", f"batch_log_{run_tag}.txt")
 
         # Training restarts at starting_epoch, so rows of later epochs are leftovers of an interrupted run.
         trim_log_to_epoch(epoch_log_path, starting_epoch - 1)
