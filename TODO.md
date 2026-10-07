@@ -10,6 +10,8 @@
 - Rewrite the stale "Architecture" subsection (it mentions TensorFlow, CIFAR and dense nets). The CNN description in Results is the correct one.
 
 ## Paper cleanup
+- Done 2026-10-06: the four deferred math fixes (½ and loss sign in the standard-free-energy lemma, ι exponent in the simplified CFE, dx instead of dF/dq, divergence order p − q). `run.py` already matched; no numbers change. See `tex files/MISTAKES.md`.
+- The log has pdfTeX "destination with the same identifier (name{figure.N})" warnings (figure anchors repeat, likely from subfig or a figure counter reset). They predate the math fixes. Find the cause and fix it.
 - Red notes still open: abstract, intro section outline, robustness Gaussian caption, crypto table and figure captions, sequential-means figure, latent-space section.
 - Replace the "old results" MNIST section with current MNIST runs (t-SNE / 2D latent from modes 6 and 1 at d = 2). The old citations (`vanDerMaaten2008`, `1284395`, empty `\citep{}`) were removed from it; add the t-SNE and SSIM citations back when it is rewritten.
 - Crypto section: the paragraph near line 1073 is unfinished ("nonzero, These results..."). The bullet list after the crypto figure is draft notes.

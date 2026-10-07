@@ -166,7 +166,7 @@ Given a set of high-dimensional data, such as a library of images, a VAE \citep{
 \begin{figure}[ht!]
     \centering
     \includegraphics[width=\textwidth]{CVAE_design.pdf}
-    \caption{Architecture of the Coupled Variational Autoencoder (CVAE). The neural network processes high-dimensional data (e.g., face images) through an encoder comprised of four convolutional layers, progressively expanding from 32 to 256 channels with LeakyReLU activations to extract hierarchical features. The encoder maps these features to a latent space by outputting the parameters of a Coupled Gaussian distribution: the mean vector $\mu_q(x)$ and the diagonal covariance matrix $\Sigma_q(x)$. The core innovation of the CVAE is the introduction of the independent-equals expectation during the reparameterization step. Rather than sampling directly from the encoded distribution, the model scales the covariance by $\frac{1}{1+\kappa}$ and draws the noise vector $\epsilon$ from an adjusted Coupled Gaussian distribution $\mathcal{N}_{\kappa/(1+\kappa)}(0, I_d)$ with modified nonlinearity $\tilde{\kappa} = \kappa/(1+\kappa) $, ensuring that the latent embedding remains highly stable even at extreme nonlinearities (e.g., $\kappa \gg 1$). Finally, the sampled latent vector $z_q$ is passed through a transposed convolutional decoder, culminating in a Sigmoid activation to yield the final reconstructed image $x^\prime$.}
+    \caption{Architecture of the Coupled Variational Autoencoder (CVAE). The neural network processes high-dimensional data (e.g., face images) through an encoder comprised of four convolutional layers, progressively expanding from 32 to 256 channels with LeakyReLU activations to extract hierarchical features. The encoder maps these features to a latent space by outputting the parameters of a Coupled Gaussian distribution: the mean vector $\mu_q(x)$ and the diagonal scale matrix $\boldsymbol{\Sigma}_q(x)$. The core innovation of the CVAE is the introduction of the independent-equals expectation during the reparameterization step. Rather than sampling directly from the encoded distribution, the model scales the scale matrix by $\frac{1}{1+\kappa}$ and draws the noise vector $\epsilon$ from an adjusted Coupled Gaussian distribution $\mathcal{N}_{\kappa/(1+\kappa)}(0, I_d)$ with modified nonlinearity $\tilde{\kappa} = \kappa/(1+\kappa) $, ensuring that the latent embedding remains highly stable even at extreme nonlinearities (e.g., $\kappa \gg 1$). Finally, the sampled latent vector $z_q$ is passed through a transposed convolutional decoder, culminating in a Sigmoid activation to yield the final reconstructed image $x^\prime$.}
     \label{fig:cvae_architecture}
 \end{figure}
 
@@ -232,7 +232,7 @@ In this report, we report on a significant advance in the architecture of the Co
 
 While information theory and its physical counterpart, statistical mechanics, establish a broad foundation, there are assumptions built around equilibrium dynamics and the exponential family that are broken in nonlinear, non-equilibrium environments. For instance, temperature is a scale property that fluctuates and therefore becomes difficult to define in nonlinear systems. Likewise, the uncertainty measured by entropy can become so dominated by these nonlinear fluctuations that the uncertainty due to linear sources in the system are overwhelmed. Thus, there has been a long-standing research objective to generalize information theory and statistical mechanics for nonlinear, non-equilibrium systems, which are characterized by non-exponential distributions. The first substantial initiative in this domain was the Rényi entropy \citep{renyiMeasuresEntropyInformation1961, bashkirovRenyiEntropyStatistical2006} which showed that the generalized mean of probabilities could replace the geometric mean used in the BGS entropy, thereby compensating for the effect of non-exponential tail decay. Sharma and Mittel \citep{sharmaNewNonadditiveMeasures1975, nielsenClosedformExpressionSharma2012} proposed a general expression for non-additive entropies. \cite{tsallisPossibleGeneralizationBoltzmannGibbs1988} proposed a non-additive entropy in conjunction with constraints based on the probabilities raised to a power, $p_i^q$; however, the $q$ has since been shown to be a function of more fundamental parameters, and the proposed inverse-scale parameter $\beta$ has been shown to not be the inverse of the scale \cite{nelsonOpenProblemsNonextensive2024}. 
 
-Recently, a new proof \citep{nelsonUniqueUniversalEntropy2026} has clarified that a generalized entropy function must be a measure of the uncertainty at the scale of the generalized Pareto, Student's t, and related shape-scale distributions. The only function that fulfills this requirement is the coupled entropy \citep{nelsonReducedPerplexitySimplified2020, nelsonAverageUncertaintySystems2017}, specified by the nonlinear statistical coupling parameter\footnote{The definition of the nonlinear statistical coupling parameter has evolved as clarity regarding the separation of the nonlinearity from other physical properties has improved. The 2010 paper introducing the topic included an expression called the "source of nonlinearity" which was  confirmed in 2026 as the correct definition. Papers between 2015-25 used a definition equal to the asymptotic tail shape; however, the source of nonlinearity is in fact the shape divided by stretching parameter.} \citep{nelsonNonlinearStatisticalCoupling2010} and composed of two components. The first component is the coupled logarithm, which increases (decreases) the penalty of low probability events for positive (negative) nonlinear statistical coupling. The second component is taking the expectation over the independent equals distribution rather than the distribution being measured. The independent-equals distribution reduces (increases) the sampling of rare events for positive (negative) nonlinearity. The combination is a precise metric that assures accuracy in the tail uncertainty while not becoming unstable.
+Recently, a new proof \citep{nelsonUniqueUniversalEntropy2026} has clarified that a generalized entropy function must be a measure of the uncertainty at the scale of the generalized Pareto, Student's t, and related shape-scale distributions. The only function that fulfills this requirement is the coupled entropy \citep{nelsonReducedPerplexitySimplified2020, nelsonAverageUncertaintySystems2017}, specified by the nonlinear statistical coupling parameter\footnote{The definition of the nonlinear statistical coupling parameter has evolved as clarity regarding the separation of the nonlinearity from other physical properties has improved. The 2010 paper introducing the topic included an expression called the "source of nonlinearity" which was  confirmed in 2026 as the correct definition. Papers between 2015-25 used a definition equal to the asymptotic tail shape; however, the asymptotic tail shape is the source of nonlinearity divided by the stretching parameter, $\kappa/\alpha$.} \citep{nelsonNonlinearStatisticalCoupling2010} and composed of two components. The first component is the coupled logarithm, which increases (decreases) the penalty of low probability events for positive (negative) nonlinear statistical coupling. The second component is taking the expectation over the independent-equals distribution rather than the distribution being measured. The independent-equals distribution reduces (increases) the sampling of rare events for positive (negative) nonlinearity. The combination is a precise metric that assures accuracy in the tail uncertainty while not becoming unstable.
 
 The nonlinear statistical coupling \citep{nelsonNonlinearStatisticalCoupling2010}, $(\kappa)$ quantifies the source of nonlinearity creating fluctuations and non-exponential characteristics. It's role in defining nonlinearity is explicit in the definition of the coupled logarithm,
 \begin{equation} \label{coupledLog}
@@ -288,18 +288,18 @@ t^{\frac{1}{\kappa}+n-1} e^{-t}\,dt}{\displaystyle
 %    \frac{\text{d}^ny}{dx^n} &= (-1)^{n}(\frac{1}{\kappa}+n-1)!\kappa^n(1+\kappa x)^{-\frac{1}{\kappa}-n} \\
 %    &= (-1)^{n}(\frac{1}{\kappa}+n-1)!\kappa^n\exp_\kappa^{-(1+n\kappa)}(x).
 %\end{align}
-This differential relationship with the exponent $1+n\kappa$ is also essential to the relationship between the survival function and the probability density function for the coupled exponential family of distributions.  The reciprocal of the coupled exponential is the survival function (sf) (one minus the cumulative distribution function (cdf)) of the generalized Pareto distribution, $S\left(x;\mu,\sigma,\kappa\right)\equiv\left(\exp_\kappa{\left(\frac{x-\mu}{\sigma}\right)}\right)^{-1}$, where $\mu$ is the location and $\sigma>0$ is the scale. Importantly, this definition is required to assure that the scale and nonlinear statistical coupling are independent. This can be generalized further to include the Student's t distribution, which has a power of two for the argument of the coupled exponential, and is referred to as the coupled Gaussian distribution. The \textit{coupled distribution} defines a family of heavy-tailed ($\kappa>0$) and compact-support ($-\frac{1}{d}<\kappa<0$) that generalizes the exponential family ($\kappa=0$). On a log-log plot the survival function of the coupled distribution has a slope of $-\frac{1}{\kappa}$  and the the log-log slope of the probability density function (pdf) at the scale, $\sigma$ is minus one. For the coupled variational autoencoder the pdf of the multivariate coupled Gaussian\footnote{For algebraic simplicity the variable $\mathbf{x}$ is treated as a continuous vector variable although these will typically be quantized values in implementation. While $f(\mathbf{x})$ is used to define the pdf, $p(\mathbf{x})$ and $q(\mathbf{x})$ will be used for the VAE definitions in order to be consistent with the literature.}
+This differential relationship with the exponent $1+n\kappa$ is also essential to the relationship between the survival function and the probability density function for the coupled exponential family of distributions.  The reciprocal of the coupled exponential is the survival function (sf) (one minus the cumulative distribution function (cdf)) of the generalized Pareto distribution, $S\left(x;\mu,\sigma,\kappa\right)\equiv\left(\exp_\kappa{\left(\frac{x-\mu}{\sigma}\right)}\right)^{-1}$, where $\mu$ is the location and $\sigma>0$ is the scale. Importantly, this definition is required to assure that the scale and nonlinear statistical coupling are independent. This can be generalized further to include the Student's t distribution, which has a power of two for the argument of the coupled exponential, and is referred to as the coupled Gaussian distribution. The \textit{coupled distribution} defines a family of heavy-tailed ($\kappa>0$) and compact-support ($-\frac{2}{d}<\kappa<0$) that generalizes the exponential family ($\kappa=0$). On a log-log plot the survival function of the coupled distribution has a slope of $-\frac{1}{\kappa}$  and the the log-log slope of the probability density function (pdf) at the scale, $\sigma$ is minus one. For the coupled variational autoencoder the pdf of the multivariate coupled Gaussian\footnote{For algebraic simplicity the variable $\mathbf{x}$ is treated as a continuous vector variable although these will typically be quantized values in implementation. While $f(\mathbf{x})$ is used to define the pdf, $p(\mathbf{x})$ and $q(\mathbf{x})$ will be used for the VAE definitions in order to be consistent with the literature.}
 %\begin{align}
     %f\left(\mathbf{x};\boldsymbol{\mu},\boldsymbol{\Sigma},\kappa\right)
     %&\equiv\left\{\begin{matrix}
     %\frac{1}{Z\left(\boldsymbol{\Sigma},\kappa\right)}
-    %\left(1+\kappa\left(\mathbf{x}-\boldsymbol{\mu}\right)^{\intercal}\mathbf{\Sigma}^{-1}\left(\mathbf{x}-\boldsymbol{\mu}\right)\right)_+^{-\frac{1+d\kappa}{2\kappa}}&\kappa\neq0  \\
+    %\left(1+\kappa\left(\mathbf{x}-\boldsymbol{\mu}\right)^{\intercal}\boldsymbol{\Sigma}^{-1}\left(\mathbf{x}-\boldsymbol{\mu}\right)\right)_+^{-\frac{1+d\kappa}{2\kappa}}&\kappa\neq0  \\
     %\frac{1}{Z\left(\boldsymbol{\Sigma}\right)}
-    %\exp\left(-\frac{1}{2}\left(\mathbf{x}-\boldsymbol{\mu}\right)^{\intercal}\mathbf{\Sigma}^{-1}\left(\mathbf{x}-\boldsymbol{\mu}\right)\right)&\kappa=0,\\
+    %\exp\left(-\frac{1}{2}\left(\mathbf{x}-\boldsymbol{\mu}\right)^{\intercal}\boldsymbol{\Sigma}^{-1}\left(\mathbf{x}-\boldsymbol{\mu}\right)\right)&\kappa=0,\\
     %\end{matrix}\right. \\
-    %&= \frac{1}{Z\left(\Sigma,\kappa\right)}
+    %&= \frac{1}{Z\left(\boldsymbol{\Sigma},\kappa\right)}
     %\exp_{2\kappa}^{-(1+d\kappa)}
-    %\left(\frac{1}{2}\left(\mathbf{x}-\mathbf{\mu}\right)^{\intercal}\mathbf{\Sigma}^{-1}\left(\mathbf{x}-\mathbf{\mu}\right)\right),
+    %\left(\frac{1}{2}\left(\mathbf{x}-\mathbf{\mu}\right)^{\intercal}\boldsymbol{\Sigma}^{-1}\left(\mathbf{x}-\mathbf{\mu}\right)\right),
 %\end{align}
 \begin{align}
     f\left(\mathbf{x};\boldsymbol{\mu},\boldsymbol{\Sigma},\kappa\right)
@@ -312,17 +312,17 @@ This differential relationship with the exponent $1+n\kappa$ is also essential t
     \left[
     \frac12
     \left(\mathbf{x}-\boldsymbol{\mu}\right)^{\intercal}
-    \mathbf{\Sigma}^{-1}
+    \boldsymbol{\Sigma}^{-1}
     \left(\mathbf{x}-\boldsymbol{\mu}\right)
     \right]
     \right)_+^{-\frac{1+\kappa d/2}{\kappa}}
     &\kappa\neq0
     \\
-    \frac{1}{Z\left(\boldsymbol{\Sigma}\right)}
+    \frac{1}{Z\left(\boldsymbol{\Sigma},0\right)}
     \exp\left(
     -\frac12
     \left(\mathbf{x}-\boldsymbol{\mu}\right)^{\intercal}
-    \mathbf{\Sigma}^{-1}
+    \boldsymbol{\Sigma}^{-1}
     \left(\mathbf{x}-\boldsymbol{\mu}\right)
     \right)
     &\kappa=0,
@@ -331,18 +331,18 @@ This differential relationship with the exponent $1+n\kappa$ is also essential t
     \right.
     \\
     &=
-    \frac{1}{Z\left(\Sigma,\kappa\right)}
+    \frac{1}{Z\left(\boldsymbol{\Sigma},\kappa\right)}
     \exp_{\kappa}^{-(1+\kappa d/2)}
     \left(
     \frac12
     \left(\mathbf{x}-\boldsymbol{\mu}\right)^{\intercal}
-    \mathbf{\Sigma}^{-1}
+    \boldsymbol{\Sigma}^{-1}
     \left(\mathbf{x}-\boldsymbol{\mu}\right)
     \right).
 \end{align} 
 where the normalization or partition function for the coupled Gaussian distributions is
 %\begin{equation}
-%Z(\mathbf{\Sigma}, \kappa) = |\mathbf{\Sigma}|^{1/2} 
+%Z(\boldsymbol{\Sigma}, \kappa) = |\boldsymbol{\Sigma}|^{1/2} 
 %\begin{cases} 
 %\frac{\Gamma\left(\frac{1}{2\kappa}\right)}{\Gamma\left(\frac{1+d\kappa}{2\kappa}\right)} \left(\frac{\pi}{\kappa}\right)^{d/2},& \kappa > 0. \\
 %(2\pi)^{d/2}, & \kappa = 0. \\
@@ -352,8 +352,8 @@ where the normalization or partition function for the coupled Gaussian distribut
 %\end{equation}
 
 \begin{equation}
-Z(\mathbf{\Sigma}, \kappa)
-=|\mathbf{\Sigma}|^{1/2}
+Z(\boldsymbol{\Sigma}, \kappa)
+=|\boldsymbol{\Sigma}|^{1/2}
 \begin{cases}
 \displaystyle
 \frac{\Gamma\left(\frac{1}{\kappa}\right)}
@@ -373,56 +373,61 @@ Z(\mathbf{\Sigma}, \kappa)
 \label{partitionFunctionCoupledGaussian}
 \end{equation}
 
-The coupled entropy, $H_\kappa,$ is structured such that its average over the distribution is equivalent to the density at the scale, $H_\kappa(\mathbf{X},d)=\ln_{\kappa}f(\mathbf{x}=\boldsymbol{I\Sigma};\boldsymbol{\mu},\boldsymbol{\Sigma},\kappa)^{-\frac{1}{1+\kappa d/2}}$. This is achieved by applying the coupled logarithm to the distribution and then averaging over the independent-equals moment. The independent-equals distribution is the density equal to a fractal number of independent random variables in the same state. The independent-equals are $\iota(\kappa,d_2m)=1+\frac{\kappa}{1+d_m \kappa}$, where $d_m \equiv d/m$ is an effective dimension. This is necessary to a) assure that the moments are finite even for heavy-tailed distributions and b) provide the statistic that is equal to the scale parameter. The independent-equals power is dependent on the moment, as well as the dimensions and the coupling, The independent-equals distribution and its moments for the coupled Gaussian are:
+The coupled entropy, $H$, is calibrated so that it equals the coupled logarithm of the density at the scale. For the coupled Gaussian this reads $\frac{1}{2}H(\mathbf{X};\kappa,2,d)^2=\ln_{\kappa}f(\mathbf{x}_\sigma;\boldsymbol{\mu},\boldsymbol{\Sigma},\kappa)^{-\frac{1}{1+\kappa d/2}}$, where $\mathbf{x}_\sigma$ is any point on the scale surface $(\mathbf{x}_\sigma-\boldsymbol{\mu})^{\intercal}\boldsymbol{\Sigma}^{-1}(\mathbf{x}_\sigma-\boldsymbol{\mu})=d$. This is achieved by applying the coupled logarithm to the distribution and then averaging over the independent-equals distribution. The independent-equals distribution raises the density to the power
+\begin{equation} \label{equ_infoDim}
+\iota(\kappa,\alpha,d)=1+\frac{\alpha\kappa}{\alpha+d\kappa},
+\end{equation}
+and normalizes it. The power $\iota(\kappa,\alpha,d)$ is the information dimension of a sample. For $\kappa\neq0$ it is a fractal number, and the name independent-equals comes from the density of $\iota$ independent random variables that all take the same value \citep{nelsonUniqueUniversalEntropy2026}. For the coupled Gaussian, $\alpha=2$ and $\iota(\kappa,2,d)=1+\frac{\kappa}{1+\kappa d/2}$. Averaging over the independent-equals distribution is necessary to a) assure that the moments are finite even for heavy-tailed distributions and b) provide the statistic that is equal to the scale parameter. The independent-equals distribution and its moments for the coupled Gaussian are:
 \begin{align} \label{equ_IE}
-    f/^{\iota(\kappa,d_2m)}(\mathbf{x}) 
-    &\equiv \frac{f(\mathbf{x})^{\iota(\kappa,d_2m)}}{\int_{\mathbf{x}\in\mathcal{X}}
-    f(\mathbf{x})^{\iota(\kappa,d_2m)}
-    dF(\mathbf{x})}  \\
-    \mu_i &= \int_{\mathbf{x}\in\mathcal{X}} 
-    x_i f/^{\iota(\kappa,d_21)}(\mathbf{x}) 
-    dF(x_i) \\
-    \sigma_{ij}^2 &= \int\int_{\mathbf{x}\in\mathcal{X}} 
-    (x_i-\mu_i) (x_j-\mu_j) 
-    f/^{\iota(\kappa,d_22)}(\mathbf{x}) 
-    dF(x_j)dF(x_i)
+    f/^{\iota(\kappa,2,d)}(\mathbf{x}) 
+    &\equiv \frac{f(\mathbf{x})^{\iota(\kappa,2,d)}}{\int_{\mathbf{x}\in\mathcal{X}}
+    f(\mathbf{x})^{\iota(\kappa,2,d)}
+    \,d\mathbf{x}}  \\
+    \mu_i &= \int_{\mathbf{x}\in\mathcal{X}}
+    x_i f/^{\iota(\kappa,2,d)}(\mathbf{x})
+    \,d\mathbf{x} \\
+    \Sigma_{ij} &= \int_{\mathbf{x}\in\mathcal{X}}
+    (x_i-\mu_i) (x_j-\mu_j)
+    f/^{\iota(\kappa,2,d)}(\mathbf{x})
+    \,d\mathbf{x}
 \end{align}
-where the symbol $/^{\iota(\kappa,d_2m)}$ is used to indicate the independent-equals distribution for the $m^{th}$ moment and the Riemann–Stieltjes integral is used to unify continuous and discrete expressions. The independent-equals distribution of $f$ is still a coupled Gaussian but with modified coupling, $\tilde{\kappa}=\frac{\kappa}{1+\kappa},$ and scale, $\tilde{\sigma}=\frac{\sigma}{\sqrt{1+\kappa}}.$ From these foundations, the coupled entropy for $d-$dimensional distributions with the stretching parameter equal to $2$ for the coupled Gaussian distribution is defined as
+where the symbol $/^{\iota(\kappa,2,d)}$ is used to indicate the independent-equals distribution. For a discrete variable the integrals become sums over the outcomes. The second independent-equals moment returns the scale matrix $\boldsymbol{\Sigma}$, which for $\kappa>0$ is not the covariance of $f$ (Lemma~\ref{second_moment}). The independent-equals distribution of $f$ is still a coupled Gaussian but with modified coupling, $\tilde{\kappa}=\frac{\kappa}{1+\kappa},$ and scale matrix, $\widetilde{\boldsymbol{\Sigma}}=\frac{\boldsymbol{\Sigma}}{1+\kappa}$. For a diagonal scale matrix, $\boldsymbol{\Sigma}=\operatorname{diag}(\sigma_1^2,\dots,\sigma_d^2)$, this is $\tilde{\sigma}_i=\sigma_i/\sqrt{1+\kappa}$ in each dimension. From these foundations, the coupled entropy for $d-$dimensional distributions with the stretching parameter equal to $2$ for the coupled Gaussian distribution is defined as \citep{nelsonUniqueUniversalEntropy2026}
 
 \begin{equation} \label{CE}
-H_\kappa\left(\mathbf{X};2,d\right)
+\frac{1}{2}H\left(\mathbf{X};\kappa,2,d\right)^2
 =\int_{\mathbf{x}\in \mathcal{X}}
-f/^{\iota(\kappa,d_22)}(\mathbf{x})
+f/^{\iota(\kappa,2,d)}(\mathbf{x})
 \ln_{\kappa}{f(\mathbf{x})^{-\frac{1}{1+\kappa d/2}}}
-dF(\mathbf{x}).
+\,d\mathbf{x},
 \end{equation}
+for $\kappa>-\frac{2}{2+d}$, the range where the coupled entropy is concave. At $\kappa=0$ the right side is the Boltzmann-Gibbs-Shannon entropy.
 The coupled entropy establishes the foundation for the coupled free energy function for variational inference, which is introduced next.
 
 \section{The Coupled VAE}
-The Coupled VAE \citep{caoCoupledVAEImproved2022} applies the coupled information functions to a generalization of the negative ELBO or free energy which can be used to modify how the variational method weights the relative importance of samples in the tail of the data distribution. In this paper, we report on a dramatic expansion of the range of heavy-tailed latent distributions that can be stably trained within an VAE architecture. The expanded capability is achieved by sampling from the independent-equals modification to the latent posterior distribution $q/^{\iota(\kappa,d_2)}(z \mid x)$, thereby guaranteeing samples with a finite variance even when the tail shape of the latent distribution goes to infinity. The relationship between a coupled Gaussian and its independent-equals modification is shown in Figure \ref{FigIndependentEquals}. As shown in Lemma~\ref{Normalization} (see Appendix~B), 
-the independent equal transformation of a multivariate coupled Gaussian remains within the coupled Gaussian family, with updated coupling parameter 
+The Coupled VAE \citep{caoCoupledVAEImproved2022} applies the coupled information functions to a generalization of the negative ELBO or free energy which can be used to modify how the variational method weights the relative importance of samples in the tail of the data distribution. In this paper, we report on a dramatic expansion of the range of heavy-tailed latent distributions that can be stably trained within an VAE architecture. The expanded capability is achieved by sampling from the independent-equals modification to the latent posterior distribution $q/^{\iota(\kappa,2,d)}(z \mid x)$, thereby guaranteeing samples with a finite variance even when the tail shape of the latent distribution goes to infinity. The relationship between a coupled Gaussian and its independent-equals modification is shown in Figure \ref{FigIndependentEquals}. As shown in Lemma~\ref{Normalization} (see Appendix~B), 
+the independent-equals transformation of a multivariate coupled Gaussian remains within the coupled Gaussian family, with updated coupling parameter 
 $\tilde{\kappa}=\frac{\kappa}{1+\kappa}$
-and covariance 
-$\tilde{\mathbf{\Sigma}}_q = \mathbf{\Sigma}_q/(1+\kappa)$.
+and scale matrix 
+$\widetilde{\boldsymbol{\Sigma}}_q = \boldsymbol{\Sigma}_q/(1+\kappa)$.
 
 \begin{figure}[ht]
     \centering
     \includegraphics[width=1.0\linewidth]{Fig_Independent_equals_sigma.pdf}
     \caption{\textbf{Independent-equals Distributions.} The plots show coupled Gaussians (solid) and their complementary independent-equals distributions (dashed) for unitary scale $(\Sigma_q=1)$, zero mean ($\mu = 0$) and $\kappa=\{10^{-6}, 10^0, 10^6\}.$ The independent-equals coupled Gaussian has a modified coupling 
     $\tilde{\kappa} = \kappa/(1+\kappa) \approx\{10^{-6},\frac{1}{2}, 1 \}$ 
-    and scale $\tilde{\Sigma}_q \approx \Sigma_q/(1+\kappa)=\{1,\frac{1}{2}, \times 10^{-6}\}.$  a) Linear-log axes, and b) log-log axes. For small values of coupling, the modification is negligible, but the deviations become significant for large coupling. The coupled Gaussian approximates a Gaussian for $x\ll \sqrt{2/\kappa}$ and a pure power-law for $x\gg \sqrt{2/\kappa}.$ See Theorem \ref{thm:bending_surface_d_dim} for a proof of the transition point separating Gaussian and power-law behavior.}
+    and scale $\tilde{\Sigma}_q = \Sigma_q/(1+\kappa)\approx\{1,\frac{1}{2}, 10^{-6}\}.$  a) Linear-log axes, and b) log-log axes. For small values of coupling, the modification is negligible, but the deviations become significant for large coupling. The coupled Gaussian approximates a Gaussian for $x\ll \sqrt{2/\kappa}$ and a pure power-law for $x\gg \sqrt{2/\kappa}.$ See Theorem \ref{thm:bending_surface_d_dim} for a proof of the transition point separating Gaussian and power-law behavior.}
     \label{FigIndependentEquals}
 \end{figure}
 
 \subsection{The Coupled Free Energy}
 With the nonlinear statistical coupling generalization, a spectrum of loss metrics is defined. The coupled log-likelihood is upper bounded by the coupled free energy, which generalizes the free energy, and includes the components of accuracy (cross-entropy) and complexity (divergence).
 \begin{equation}
-\ln_{\kappa} p(\textbf{x})^\frac{-1}{1+\kappa d/2}\leq
+\ln_{\kappa} p(\textbf{x})^\frac{-1}{1+\kappa d_d/2}\leq
 \mathcal{F}_{\theta,\phi,\kappa}(\textbf{x}) = 
-\mathbb{E}_{q/^{\iota(\kappa,d_2)}(\textbf{z}\mid \textbf{x})}
-\left[\text{ln}_{\kappa}p_\theta(\textbf{x} \mid \textbf{z})^{\frac{-1}{1+\kappa d/2}}\right] + H_{\kappa}\left[q_\phi(\textbf{z}\mid \textbf{x}) \| p_\theta(\textbf{z})\right].
+\mathcal{L}_{\kappa}(\textbf{x}) + D_{\kappa}\left(q_\phi(\textbf{z}\mid \textbf{x}) \| p_\theta(\textbf{z})\right).
 \end{equation}
-The generalization uses addition to combine the expected likelihood and the divergence.  The alternative is to use a coupled sum, which introduces a nonlinear interaction between the likelihood and the divergence.  The distinction is whether nonlinear correlation is modeled in the probability domain (regular summation) or in the information domain (coupled sum). The coupled-log likelihood is measured from generated samples based upon draws from the independent-equals posterior distribution, $q/^{\iota(\kappa,d_2)}(\textbf{z}\mid \textbf{x})$, as defined in \ref{equ_IE}. The coupled divergence is also an expectation over the independent-equals posterior distribution. Both of these functions have closed form solutions when the coupling of the metric and distributions match, as shown in the next subsection. 
+Here $d$ is the latent dimension and $d_d$ is the data dimension, the number of values in one data sample (for example, $3\times128\times128$ for a CelebA image). The coupled logarithm of a density takes the dimension of the space where that density lives, so the reconstruction terms use $d_d$ and the latent terms use $d$.
+The generalization uses addition to combine the expected likelihood and the divergence.  The alternative is to use a coupled sum, which introduces a nonlinear interaction between the likelihood and the divergence.  The distinction is whether nonlinear correlation is modeled in the probability domain (regular summation) or in the information domain (coupled sum). The coupled-log likelihood is measured from generated samples based upon draws from the independent-equals posterior distribution, $q/^{\iota(\kappa,2,d)}(\textbf{z}\mid \textbf{x})$, as defined in \ref{equ_IE}. The coupled divergence is also an expectation over the independent-equals posterior distribution. Both of these functions have closed form solutions when the coupling of the metric and distributions match, as shown in the next subsection. 
 
 \begin{figure}[ht!]
     \centering
@@ -432,50 +437,50 @@ The generalization uses addition to combine the expected likelihood and the dive
     \label{kappa_log_family}
 \end{figure}
 
-The coupled log-likelihood or coupled cross-entropy is
+The coupled log-likelihood, or coupled cross-entropy, is the coupled reconstruction loss
 \begin{align}
-&H_\kappa\left(q_\phi(\textbf{z} \mid \textbf{x}),p_\theta(\textbf{x} \mid \textbf{z});2,d\right) \nonumber \\
-    &=\mathbb{E}_{q_\phi/^{\iota(\kappa,d_2)}(\textbf{z} \mid \textbf{x})}
-    \left[ \ln_{\kappa} p_\theta^{-\frac{1}{1+\kappa d/2}}(\textbf{x} \mid \textbf{z})\right] \nonumber \\
-    &=\int_{\mathbf{z}\in \mathcal{X}}
-    q_\phi/^{\iota(\kappa,d_22)}(\textbf{z} \mid \textbf{x})
-    \ln_{\kappa}p_\theta(\textbf{x} \mid \textbf{z})^{-\frac{1}{1+\kappa d/2}} dq_\phi/^{\iota(\kappa,d_2)}(\textbf{z} \mid \textbf{x}).
+&\mathcal{L}_\kappa(\textbf{x}) \nonumber \\
+    &=\mathbb{E}_{q_\phi/^{\iota(\kappa,2,d)}(\textbf{z} \mid \textbf{x})}
+    \left[ \ln_{\kappa} p_\theta^{-\frac{1}{1+\kappa d_d/2}}(\textbf{x} \mid \textbf{z})\right] \nonumber \\
+    &=\int_{\mathbb{R}^d}
+    q_\phi/^{\iota(\kappa,2,d)}(\textbf{z} \mid \textbf{x})
+    \ln_{\kappa}p_\theta(\textbf{x} \mid \textbf{z})^{-\frac{1}{1+\kappa d_d/2}}\, d\mathbf{z}.
 \end{align}
-The coupled cross-entropy has an important balance in which for positive values of the coupling the coupled logarithm goes to infinity faster for low probability events of $p$; however, this is counter-balanced by the independent-equals distribution $(q/^{\iota(\kappa,d_2)}),$ which has lower scale and shape then the distribution $q$. From this counter-balance, the metric is sensitive to the tail performance while assuring that the training process limits the instability from extreme samples. The coupled divergence is
+The coupled cross-entropy has an important balance in which for positive values of the coupling the coupled logarithm goes to infinity faster for low probability events of $p$; however, this is counter-balanced by the independent-equals distribution $(q/^{\iota(\kappa,2,d)}),$ which has lower scale and shape then the distribution $q$. From this counter-balance, the metric is sensitive to the tail performance while assuring that the training process limits the instability from extreme samples. The coupled divergence is
 \begin{align}
-&H_\kappa\left(\mathbf{q}||\mathbf{p};2,d\right) \nonumber \\
-&=\mathbb{E}_{q_\phi/^{\iota(\kappa,d_2)}
+&D_\kappa\left(q_\phi(\textbf{z} \mid \textbf{x})\,\|\,p_\theta(\textbf{z})\right) \nonumber \\
+&=\mathbb{E}_{q_\phi/^{\iota(\kappa,2,d)}
 (\textbf{z} \mid \textbf{x})}
-\left[ \ln_{\kappa} q_\phi(\textbf{z} \mid \textbf{x})^{-\frac{1}{1+\kappa d/2}}
--\ln_{\kappa} p_\theta(\textbf{z})^{-\frac{1}{1+\kappa d/2}}\right] \nonumber \\
-    &=\int_{\mathbf{z}\in \mathcal{X}}
-    q_\phi/^{\iota(\kappa,d_2)}
-    \left( \ln_{\kappa} q_\phi(\textbf{z} \mid \textbf{x})^{-\frac{1}{1+\kappa d/2}}
-    -\ln_{\kappa} p_\theta(\textbf{z})
+\left[ \ln_{\kappa} p_\theta(\textbf{z})^{-\frac{1}{1+\kappa d/2}}
+-\ln_{\kappa} q_\phi(\textbf{z} \mid \textbf{x})^{-\frac{1}{1+\kappa d/2}}\right] \nonumber \\
+    &=\int_{\mathbb{R}^d}
+    q_\phi/^{\iota(\kappa,2,d)}(\textbf{z} \mid \textbf{x})
+    \left( \ln_{\kappa} p_\theta(\textbf{z})^{-\frac{1}{1+\kappa d/2}}
+    -\ln_{\kappa} q_\phi(\textbf{z} \mid \textbf{x})
     ^{-\frac{1}{1+\kappa d/2}}\right)
-    dq_\phi/^{\iota(\kappa,d_2)}(\textbf{z} \mid \textbf{x}).
+    d\mathbf{z}.
 \end{align}
 Adding the coupled divergence and coupled cross entropy terms gives the Coupled Free Energy (CFE) used as the optimization objective in the CVAE.
 
 \subsection{Closed form given matching nonlinear nonlinear statistical coupling}
 
-Improved robustness for the VAE can be achieved using a heavy-tailed coupled Gaussian (or Student's t) distribution for the latent and data distributions \citep{caoCoupledVAEImproved2022, kim$t^3$VariationalAutoencoderLearning2023} and/or the coupled free energy metric. In this study we utilize an architecture in which the latent distribution $p_\theta(x)$, data distribution $p_\theta(x|z)$ belong to the coupled Gaussian with a nonlinear statistical coupling $\kappa$ matched to the coupled free energy. This matching condition enables the derivation of a closed form solution for the coupled free energy objective, thereby assuring efficient computation of the gradients. 
+Improved robustness for the VAE can be achieved using a heavy-tailed coupled Gaussian (or Student's t) distribution for the latent and data distributions \citep{caoCoupledVAEImproved2022, kim$t^3$VariationalAutoencoderLearning2023} and/or the coupled free energy metric. In this study we utilize an architecture in which the latent distribution $p_\theta(z)$, data distribution $p_\theta(x|z)$ belong to the coupled Gaussian with a nonlinear statistical coupling $\kappa$ matched to the coupled free energy. This matching condition enables the derivation of a closed form solution for the coupled free energy objective, thereby assuring efficient computation of the gradients. 
 
-The multivariate coupled Gaussian distribution with mean $\boldsymbol{\mu}$ and covariance $\Sigma$ is defined as:
+The multivariate coupled Gaussian distribution with mean $\boldsymbol{\mu}$ and scale matrix $\boldsymbol{\Sigma}$ is defined as:
 \begin{equation}
-\mathcal{N}_{\kappa}(\mathbf{x};\boldsymbol{\mu},\Sigma)
-=\frac{1}{Z_{\kappa}(\Sigma, \kappa)}\exp_{\kappa}^{-(1+\kappa d/2)}\!\left(\frac{1}{2}
-(\mathbf{x}-\boldsymbol{\mu})^{\top}\Sigma^{-1}(\mathbf{x}-\boldsymbol{\mu})\right),
+\mathcal{N}_{\kappa}(\mathbf{x};\boldsymbol{\mu},\boldsymbol{\Sigma})
+=\frac{1}{Z(\boldsymbol{\Sigma}, \kappa)}\exp_{\kappa}^{-(1+\kappa d/2)}\!\left(\frac{1}{2}
+(\mathbf{x}-\boldsymbol{\mu})^{\top}\boldsymbol{\Sigma}^{-1}(\mathbf{x}-\boldsymbol{\mu})\right),
 \end{equation}
-where $Z_{\kappa}$ is the normalization constant. Under the matching coupling assumption, the coupled free energy admits closed form expression involving quadratic forms of the type
+where $Z(\boldsymbol{\Sigma},\kappa)$ is the normalization constant of Eq.~\eqref{partitionFunctionCoupledGaussian}. Under the matching coupling assumption, the coupled free energy admits closed form expression involving quadratic forms of the type
 \[
 (\boldsymbol{\mu}_p - \boldsymbol{\mu}_q)^\top
-\Sigma_p^{-1}
+\boldsymbol{\Sigma}_p^{-1}
 (\boldsymbol{\mu}_p - \boldsymbol{\mu}_q)
 \]
 and trace terms such as
 \[
-\operatorname{tr}(\Sigma_p^{-1}\Sigma_q),
+\operatorname{tr}(\boldsymbol{\Sigma}_p^{-1}\boldsymbol{\Sigma}_q),
 \]
 which correspond to Mahalanobis distances and mean-square averages. 
 
@@ -496,14 +501,14 @@ Since we are particularly interested in the performance in tails of the distribu
 The coupled free energy with matching coupled Gaussian  distributions simplifies to 
 \begin{align}
 \mathcal{F}_{\theta,\phi,\kappa}(\mathbf{x})
-&= \mathbb{E}_{q_\phi/^{\frac{\kappa}{1+\kappa d/2}}(\mathbf{z}\mid \mathbf{x})}\left[\ln_{\kappa}\left(
+&= \mathbb{E}_{q_\phi/^{\iota(\kappa,2,d)}(\mathbf{z}\mid \mathbf{x})}\left[\ln_{\kappa}\left(
 p_\theta(\mathbf{x}\mid \mathbf{z})
-\right)^{-\frac{1}{1+\kappa d/2}}\right]
+\right)^{-\frac{1}{1+\kappa d_d/2}}\right]
 \\
-&\quad+ \mathbb{E}_{q_\phi/^{\frac{\kappa}{1+\kappa d/2}}(\mathbf{z}\mid\mathbf{x})}
+&\quad+ \mathbb{E}_{q_\phi/^{\iota(\kappa,2,d)}(\mathbf{z}\mid\mathbf{x})}
 \left[\ln_{\kappa}\left(
-q_\phi(\mathbf{z}\mid \mathbf{x})^{-\frac{1}{1+\kappa d/2}}\right) - \ln_{\kappa}
-\left(p_\theta(\mathbf{z})^{-\frac{1}{1+\kappa d/2}}\right)\right].
+p_\theta(\mathbf{z})^{-\frac{1}{1+\kappa d/2}}\right) - \ln_{\kappa}
+\left(q_\phi(\mathbf{z}\mid \mathbf{x})^{-\frac{1}{1+\kappa d/2}}\right)\right].
 \end{align}
 
 The full derivation and simplified expression are provided in Theorem~\ref{theorem_CFE} (Appendix~B).
@@ -550,7 +555,7 @@ In algorithm \ref{alg:cvae_training} we detail the core logic of the model. Duri
         \State $\mu_q, \log\sigma_q^2 \leftarrow \text{Encoder}_\phi(X)$
         \State $\sigma_q \leftarrow \exp(0.5 \cdot \log\sigma_q^2)$
         \Statex
-        \State \Comment{Apply Independent-Equals (IE) Scaling to safeguard gradients (Lemma 2)}
+        \State \Comment{Apply Independent-Equals (IE) Scaling to safeguard gradients (Lemma~\ref{Normalization})}
         \State $\tilde{\kappa} \leftarrow \frac{\kappa}{1+\kappa}$
         \State $\tilde{\sigma}_q \leftarrow \frac{\sigma_q}{\sqrt{1+\kappa}}$
         \Statex
@@ -687,13 +692,13 @@ In this section, we show the initial results of the CVAE performance. To train t
 \begin{figure}[ht!]
         \centering
 		\includegraphics[width= \linewidth]{Fig_Energy.pdf} 
-            \caption{Comparison of the Coupled Free Energy across different values of the coupling parameter $\kappa$ for both (A) training and (B) validation phases using diagonal covariance. The models are trained and validated using the Independent equals distribution. The inset in panel (A) shows the train Coupled Free Energy of the most extreme models over the batches on a log-log scale.}
+            \caption{Comparison of the Coupled Free Energy across different values of the coupling parameter $\kappa$ for both (A) training and (B) validation phases using a diagonal scale matrix. The models are trained and validated using the Independent-equals distribution. The inset in panel (A) shows the train Coupled Free Energy of the most extreme models over the batches on a log-log scale.}
 		\label{Fig_energy.png}
 \end{figure}
 
-The model was trained using Adam Optimizer and without a learning rate scheduler. To ensure reproducibility and consistent weight initialization, all linear and transposed convolution layers were initialized using the Kaiming uniform method (for layers with LeakyReLU activations), while linear layers used Xavier initialization. Batch normalization layers were initialized with unit scale and zero bias, and their running statistics were reset when loading checkpoints, helping stabilize the internal covariate shift during training. The CelebA data set was randomly split into $70\%$ training, $15\% $ validation, and $15\%$ test sets, and the data was shuffled at the beginning of each epoch. The models were trained and validated using samples from the independent equals distribution. For validation and testing, samples were drawn from the coupled Gaussian and the independent equals distribution for comparison. A fixed batch of validation images generated consistent reconstructions and samples across epochs for visual assessment.
+The model was trained using Adam Optimizer and without a learning rate scheduler. To ensure reproducibility and consistent weight initialization, all linear and transposed convolution layers were initialized using the Kaiming uniform method (for layers with LeakyReLU activations), while linear layers used Xavier initialization. Batch normalization layers were initialized with unit scale and zero bias, and their running statistics were reset when loading checkpoints, helping stabilize the internal covariate shift during training. The CelebA data set was randomly split into $70\%$ training, $15\% $ validation, and $15\%$ test sets, and the data was shuffled at the beginning of each epoch. The models were trained and validated using samples from the independent-equals distribution. For validation and testing, samples were drawn from the coupled Gaussian and the independent-equals distribution for comparison. A fixed batch of validation images generated consistent reconstructions and samples across epochs for visual assessment.
 
-The architecture employed for the VAE and CVAE models consists of a convolutional encoder-decoder structure. The encoder is built from four convolutional layers with increasing depth (32 to 256 channels), followed by batch normalization and LeakyReLU activation functions. The encoded feature map is flattened and passed through two linear layers to produce the latent mean and log-variance vectors. The decoder mirrors the encoder structure with transposed convolutions, batch normalization, and LeakyReLU activations, culminating in a final Sigmoid layer to map outputs to the $[0, 1]$ range. 
+The architecture employed for the VAE and CVAE models consists of a convolutional encoder-decoder structure. The encoder is built from four convolutional layers with increasing depth (32 to 256 channels), followed by batch normalization and LeakyReLU activation functions. The encoded feature map is flattened and passed through two linear layers to produce the latent mean and the logarithm of the squared scale, $\log\sigma_q^2$ (the log-variance only at $\kappa=0$). The decoder mirrors the encoder structure with transposed convolutions, batch normalization, and LeakyReLU activations, culminating in a final Sigmoid layer to map outputs to the $[0, 1]$ range. 
 
 We conducted the experiments using PyTorch's automatic differentiation framework (autograd), which computes gradients based on the standard Euclidean geometry of the parameter space. Although this approach is sufficient for baseline comparisons and initial performance assessments, it does not account for the curved geometry induced by the coupled exponential family. Future work will incorporate the information geometric formulation introduced in this paper, using the analytically derived gradients and curvature-aware optimization based on the coupled free energy. This is expected to improve the efficiency and stability of the learning convergence by aligning the optimization trajectory with the intrinsic geometry of the coupled statistical manifold.
 
@@ -1141,7 +1146,7 @@ Finite-variance estimation for machine learning;  Tractable training of complex 
 	\begin{center}
 		\includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{Fig_Sequential_means.png} 
 		\begin{center}
-            \caption{\textcolor{red}{update image quality! dimension?? update sigma! after the introduction of the independent-equals!  (d) vertical axis should go from zero to 0.25. Independent equals word color in orange!!}  (a) Coupled Gaussians are generated with Generalized Box–Muller ($\ln \rightarrow \ln$) and (b) have undefined sequential means for $\kappa > 1$. (c) Independent equals sequential means converge even for $\kappa > 1$, (d) yielding robust and finite-variance estimators.}
+            \caption{\textcolor{red}{update image quality! dimension?? update sigma! after the introduction of the independent-equals!  (d) vertical axis should go from zero to 0.25. Independent-equals word color in orange!!}  (a) Coupled Gaussians are generated with Generalized Box–Muller ($\ln \rightarrow \ln$) and (b) have undefined sequential means for $\kappa > 1$. (c) Independent-equals sequential means converge even for $\kappa > 1$, (d) yielding robust and finite-variance estimators.}
 		\label{Fig_Sequential_means.png}
 		\end{center}
 	\end{center}
@@ -1337,7 +1342,7 @@ we obtain the leading-order relation
 This establishes the first-order equivalence between the $\beta$ coefficient and the prior variance.
 \end{proof}
 
-The result extends component-wise to diagonal multivariate Gaussians. In the case of full covariance matrices, the equivalence corresponds to an isotropic rescaling $\mathbf{\Sigma}_p \mapsto \mathbf{\Sigma}_p / \sqrt{\beta}$ under the same small-deviation assumptions.
+The result extends component-wise to diagonal multivariate Gaussians. In the case of full covariance matrices, the equivalence corresponds to an isotropic rescaling $\boldsymbol{\Sigma}_p \mapsto \boldsymbol{\Sigma}_p / \sqrt{\beta}$ under the same small-deviation assumptions.
 
 That result shows that the beta-VAE performance can be obtained with a standard VAE with prior variance $    \sigma_p^2 = \frac{1}{\sqrt{\beta}}$. Therefore, the effects of adding the hyperparameter $\beta$ can be obtained just by tuning the prior variance.
 
@@ -1347,35 +1352,34 @@ That result shows that the beta-VAE performance can be obtained with a standard 
 
 In this appendix, we derive the closed-form expression of the Coupled Free Energy (CFE) for multivariate coupled Gaussian distributions. Both the latent distribution and noise model for the data have coupled Gaussian distributions with nonlinear statistical coupling $\kappa \geq 0.$
 
-In this context, we define $R(\kappa,\alpha=2,d):=\frac{\kappa}{1+\kappa d/2}.$
-We interpret $R(\kappa,2,d)$ as the informational relative risk aversion, given its role in modifying the cost of information. This quantity provides a compact measure of the joint influence of tail heaviness $\kappa$, the stretching parameter, which equals 2 for the Gaussian, and the dimension $d$. The extensivity of the coupled entropy, measured by the Hanel-Thurner long-range scaling parameter \citep{hanelComprehensiveClassificationComplex2011,nelsonUniqueUniversalEntropy2026}, is equal to $R(\kappa,2,d)/2$.
+In this context, the information dimension of Eq.~\eqref{equ_infoDim} minus one, $\iota(\kappa,2,d)-1=\frac{\kappa}{1+\kappa d/2}$, is the informational relative risk aversion, given its role in modifying the cost of information. This quantity provides a compact measure of the joint influence of tail heaviness $\kappa$, the stretching parameter, which equals 2 for the Gaussian, and the dimension $d$. The extensivity of the coupled entropy, measured by the Hanel-Thurner long-range scaling parameter \citep{hanelComprehensiveClassificationComplex2011,nelsonUniqueUniversalEntropy2026}, is equal to $\left(\iota(\kappa,2,d)-1\right)/2$.
 
 \begin{lemma}\label{Normalization} \textbf{Normalization of the independent-equals coupled Gaussian.} Let
 \[
-q(z \mid x) = \frac{1}{Z(\mathbf{\Sigma}_q, \kappa,\alpha)}
-\Bigl(1 + \kappa \bigl[\tfrac{1}{2}(z-\mu_q)^{\!\intercal} \mathbf{\Sigma}_q^{-1} (z-\mu_q)\bigr]\Bigr)^{-\frac{1 + \kappa d/2}{\kappa}}, 
+q(z \mid x) = \frac{1}{Z(\boldsymbol{\Sigma}_q, \kappa)}
+\Bigl(1 + \kappa \bigl[\tfrac{1}{2}(z-\mu_q)^{\!\intercal} \boldsymbol{\Sigma}_q^{-1} (z-\mu_q)\bigr]\Bigr)^{-\frac{1 + \kappa d/2}{\kappa}}, 
 \]
-be a $d$-dimensional multivariate coupled Gaussian with stretching parameter ($\alpha=2$), mean $(\mu_q \in \mathbb{R}^d)$, positive-definite scale matrix $(\mathbf{\Sigma}_q \in \mathbb{R}^{d \times d})$, and nonlinear statistical coupling parameter ($\kappa > 0$).
+be a $d$-dimensional multivariate coupled Gaussian with stretching parameter ($\alpha=2$), mean $(\mu_q \in \mathbb{R}^d)$, positive-definite scale matrix $(\boldsymbol{\Sigma}_q \in \mathbb{R}^{d \times d})$, and nonlinear statistical coupling parameter ($\kappa > 0$).
 Define  
 \[
-q/^{\iota(\kappa,d_2)}(z \mid x) \;:=\; \frac{q(z \mid x)^{1 + \frac{\kappa}{1+\kappa d/2}}}
-{\int_{\mathbb{R}^d} q(z \mid x)^{1 + \frac{\kappa}{1+\kappa d/2}} \, dz}.
+q/^{\iota(\kappa,2,d)}(z \mid x) \;:=\; \frac{q(z \mid x)^{\iota(\kappa,2,d)}}
+{\int_{\mathbb{R}^d} q(z \mid x)^{\iota(\kappa,2,d)} \, dz}.
 \]
-Then $(q/^{\iota(\kappa,d_2)}(z \mid x))$ is the independent-equals distribution, which is a multivariate coupled Gaussian, with the same mean $(\tilde\mu_q = \mu_q)$ and modified coupling and scale parameters,  
+Then $(q/^{\iota(\kappa,2,d)}(z \mid x))$ is the independent-equals distribution, which is a multivariate coupled Gaussian, with the same mean $(\tilde\mu_q = \mu_q)$ and modified coupling and scale parameters,  
 \[
 \tilde\kappa= \frac{\kappa}{1+\kappa}, \ 
-\widetilde{\mathbf{\Sigma}}_q =  \frac{\mathbf{\Sigma}_q}{1+\kappa}.
+\widetilde{\boldsymbol{\Sigma}}_q =  \frac{\boldsymbol{\Sigma}_q}{1+\kappa}.
 \]
 Explicitly,  the independent-equals distribution is
 \[
-q/^{\iota(\kappa,d_2)}(z \mid x) = \frac{1}{\widetilde Z_q(\mathbf{\widetilde\Sigma}_q, \tilde\kappa,2)}
-\Bigl(1 + \tilde\kappa \bigl[\tfrac{1}{2}(z-\tilde\mu_q)^{\!\intercal} \mathbf{\widetilde\Sigma}_q^{-1} (z-\tilde\mu_q)\bigr]\Bigr)^{-\frac{1 + \tilde\kappa d/2}{\tilde\kappa}},
+q/^{\iota(\kappa,2,d)}(z \mid x) = \frac{1}{Z(\widetilde{\boldsymbol{\Sigma}}_q, \tilde\kappa)}
+\Bigl(1 + \tilde\kappa \bigl[\tfrac{1}{2}(z-\tilde\mu_q)^{\!\intercal} \widetilde{\boldsymbol{\Sigma}}_q^{-1} (z-\tilde\mu_q)\bigr]\Bigr)^{-\frac{1 + \tilde\kappa d/2}{\tilde\kappa}},
 \]
-where the normalization constant is given by 
+where the normalization constant is the coupled Gaussian partition function of Eq.~\eqref{partitionFunctionCoupledGaussian} at the new parameters,
 \begin{align}
-    \widetilde Z_q(\mathbf{\widetilde\Sigma_q}, \tilde\kappa)  
+    Z(\widetilde{\boldsymbol{\Sigma}}_q, \tilde\kappa)  
     &=\pi^\frac{d}{2}
-|\boldsymbol{\widetilde\Sigma}_q|^\frac{1}{2}
+|\widetilde{\boldsymbol{\Sigma}}_q|^\frac{1}{2}
 \left\{
 \begin{matrix}
     \left(\frac{\tilde{\kappa}}{2}\right)^{-d/2}
@@ -1389,7 +1393,7 @@ where the normalization constant is given by
 
 \begin{proof} 
 To construct the independent-equals 
-$q/^{\iota(\kappa,d_2)}(z \mid x)$, 
+$q/^{\iota(\kappa,2,d)}(z \mid x)$, 
 we start by raising $(q(z \mid x))$ to the power
 \[
 1 + \frac{\kappa}{1+\kappa d/2}
@@ -1397,10 +1401,10 @@ we start by raising $(q(z \mid x))$ to the power
 \]
 obtaining
 \begin{equation}\label{coupledGaussianPowerBeta}
-q/^{\iota(\kappa,d_2)}(z \mid x) \propto
+q/^{\iota(\kappa,2,d)}(z \mid x) \propto
 \Bigl(1 + \kappa 
 \bigl[\tfrac{1}{2}(z-\mu_q)^{\!\intercal} 
-\mathbf{\Sigma}_q^{-1} (z-\mu_q)
+\boldsymbol{\Sigma}_q^{-1} (z-\mu_q)
 \bigr]
 \Bigr)^{-\frac{1+\kappa(d/2+1)}{\kappa}}.
 \end{equation}
@@ -1409,19 +1413,19 @@ The normalization constant of this power density is
 \begin{equation}\label{Zq1}
 \tilde Z_q := \int_{\mathbb{R}^d}\Bigl(
 1 + \kappa \bigl[\tfrac{1}{2}(z-\mu_q)^{\!\intercal} 
-\mathbf{\Sigma}_q^{-1} (z-\mu_q)\bigr]
+\boldsymbol{\Sigma}_q^{-1} (z-\mu_q)\bigr]
 \Bigr)^{-\frac{1+\kappa(d/2+1)}{\kappa}}\, dz.
 \end{equation}
 
 To compute the partition function $\tilde Z_q$, we set 
 $y = z - \mu_q$ and diagonalize the scale matrix by writing
-$\mathbf{\Sigma}_q^{-1} = U \Lambda^{-1} U^{\!\intercal}$ 
+$\boldsymbol{\Sigma}_q^{-1} = U \Lambda^{-1} U^{\!\intercal}$ 
 where $U$ is orthogonal and 
 $\Lambda = \operatorname{diag}(\lambda_1,\dots,\lambda_d)$ 
 is a diagonal matrix. Hence, considering the rotation transformation 
 $s = U^{\!\intercal} y$ with unitary Jacobian, we calculate
 \begin{equation}\label{diagonalization}
-y^{\!\intercal} \mathbf{\Sigma}_q^{-1} y
+y^{\!\intercal} \boldsymbol{\Sigma}_q^{-1} y
 =(U^{\!\intercal}y)^{\!\intercal} 
 \Lambda^{-1} (U^{\!\intercal}y)
 =\sum_{i=1}^d \frac{s_i^2}{\lambda_i}.
@@ -1475,14 +1479,14 @@ The inner integral factorizes as a product of Gaussian integrals:
 }\\
 &=
 \Bigl(\frac{2\pi}{t\kappa}\Bigr)^{d/2}
-\sqrt{|\mathbf{\Sigma}_q|}.
+\sqrt{|\boldsymbol{\Sigma}_q|}.
 \end{aligned}
 \end{equation}
 
 Substituting back Eq.~\eqref{GaussianIntegral} into Eq.~\eqref{Zq3} yields
 \[
 \tilde Z_q
-=\frac{\sqrt{|\mathbf{\Sigma}_q|}}
+=\frac{\sqrt{|\boldsymbol{\Sigma}_q|}}
 {\Gamma(\gamma)}\Bigl(\frac{2\pi}{\kappa}
 \Bigr)^{d/2}\int_0^\infty
 t^{\gamma-1-d/2}e^{-t}\, dt.
@@ -1508,17 +1512,18 @@ Hence, we obtain the normalization constant of the independent-equals distributi
 }{
 \Gamma\!\Bigl(\frac{1+\kappa(d/2+1)}{\kappa}\Bigr)
 }
-\sqrt{\Bigl(\frac{2\pi}{\kappa}\Bigr)^d|\mathbf{\Sigma}_q|
+\sqrt{\Bigl(\frac{2\pi}{\kappa}\Bigr)^d|\boldsymbol{\Sigma}_q|
 }.
 \end{equation}
+Since $\frac{1+\kappa}{\kappa}=\frac{1}{\tilde\kappa}$ and $\bigl(\frac{2\pi}{\kappa}\bigr)^{d}|\boldsymbol{\Sigma}_q|=\bigl(\frac{2\pi}{\tilde\kappa}\bigr)^{d}|\widetilde{\boldsymbol{\Sigma}}_q|$, this is $\tilde Z_q=Z(\widetilde{\boldsymbol{\Sigma}}_q,\tilde\kappa)$, the same partition function evaluated at the independent-equals parameters derived below.
 
 Now, writing the independent-equals distribution in the standard coupled-Gaussian form
 \begin{equation}\label{Q_standard_Equation}
-q/^{\iota(\kappa,d_2)}(z \mid x)
+q/^{\iota(\kappa,2,d)}(z \mid x)
 =
 \frac{1}{\widetilde Z_q}
 \Bigl(1+\tilde{\kappa}\bigl[\tfrac12 y^\top
-\widetilde{\mathbf{\Sigma}}_q^{-1}y\bigr]
+\widetilde{\boldsymbol{\Sigma}}_q^{-1}y\bigr]
 \Bigr)^{-\frac{1+\tilde{\kappa} d/2}{\tilde{\kappa}}},\qquad y=z-\mu_q,
 \end{equation}
 and combining with Eq.~\eqref{coupledGaussianPowerBeta} and comparing the exponents, we obtain
@@ -1537,110 +1542,110 @@ Eqs.~\eqref{Q_standard_Equation}
 and \eqref{coupledGaussianPowerBeta},
 the equality of the quadratic forms for all $y$ requires that the scale matrices satisfy
 \[
-\kappa\bigl[\tfrac12y^{\!\intercal}\mathbf{\Sigma}_q^{-1}y\bigr]=
+\kappa\bigl[\tfrac12y^{\!\intercal}\boldsymbol{\Sigma}_q^{-1}y\bigr]=
 \tilde{\kappa}\bigl[\tfrac12y^{\!\intercal}
-\widetilde{\mathbf{\Sigma}}_q^{-1}y\bigr]
+\widetilde{\boldsymbol{\Sigma}}_q^{-1}y\bigr]
 \qquad \forall y.
 \]
 
 Thus, it follows that
 \[
-\kappa\,\mathbf{\Sigma}_q^{-1}
+\kappa\,\boldsymbol{\Sigma}_q^{-1}
 =
-\tilde{\kappa}\,\widetilde{\mathbf{\Sigma}}_q^{-1}.
+\tilde{\kappa}\,\widetilde{\boldsymbol{\Sigma}}_q^{-1}.
 \]
 
 Substituting back Eq.~\eqref{kappa}, we get
 \begin{equation}
-\widetilde{\mathbf{\Sigma}}_q
+\widetilde{\boldsymbol{\Sigma}}_q
 =
-\frac{\mathbf{\Sigma}_q}{1+\kappa}.
+\frac{\boldsymbol{\Sigma}_q}{1+\kappa}.
 \end{equation}
 
 Therefore, combining the above results, the independent-equals density preserves the coupled-Gaussian form with parameters
 \[
 \tilde{\kappa}=\frac{\kappa}{1+\kappa},
 \qquad
-\widetilde{\mathbf{\Sigma}}_q
+\widetilde{\boldsymbol{\Sigma}}_q
 =
-\frac{\mathbf{\Sigma}_q}{1+\kappa}.
+\frac{\boldsymbol{\Sigma}_q}{1+\kappa}.
 \]
 \end{proof}
 
 
 \begin{lemma}[Second independent-equals moment of a coupled Gaussian]\label{second_moment}
-Given a $d$-dimensional multivariate coupled Gaussian with mean $\mu_q \in \mathbb{R}^d$, positive-definite scale matrix $\mathbf{\Sigma}_q \in \mathbb{R}^{d \times d}$, and nonlinear statistical coupling $\kappa>0$
+Given a $d$-dimensional multivariate coupled Gaussian with mean $\mu_q \in \mathbb{R}^d$, positive-definite scale matrix $\boldsymbol{\Sigma}_q \in \mathbb{R}^{d \times d}$, and nonlinear statistical coupling $\kappa>0$
 \begin{equation}
-Z|(X=x) \sim q(z \mid x) = \frac{1}{Z(\mathbf{\Sigma}_q, \kappa)}
-\Bigl(1 + \kappa \bigl[\tfrac{1}{2}(z-\mu_q)^{\!\intercal} \mathbf{\Sigma}_q^{-1} (z-\mu_q)\bigr]\Bigr)^{-\frac{1 + \kappa d/2}{\kappa}}, 
+Z|(X=x) \sim q(z \mid x) = \frac{1}{Z(\boldsymbol{\Sigma}_q, \kappa)}
+\Bigl(1 + \kappa \bigl[\tfrac{1}{2}(z-\mu_q)^{\!\intercal} \boldsymbol{\Sigma}_q^{-1} (z-\mu_q)\bigr]\Bigr)^{-\frac{1 + \kappa d/2}{\kappa}}, 
 \end{equation}
 such that
 \[
-1 + \kappa \bigl[\tfrac{1}{2}(z-\mu_q)^{\!\intercal} \mathbf{\Sigma}_q^{-1} (z-\mu_q)\bigr] >0.
+1 + \kappa \bigl[\tfrac{1}{2}(z-\mu_q)^{\!\intercal} \boldsymbol{\Sigma}_q^{-1} (z-\mu_q)\bigr] >0.
 \]
 with independent-equals distribution 
 \begin{equation}
-q/^{\iota(\kappa,d_2)}(z \mid x)
+q/^{\iota(\kappa,2,d)}(z \mid x)
 \;:=\;\frac{
-q(z \mid x)^{1 + \frac{\kappa}{1+\kappa d/2}}
+q(z \mid x)^{\iota(\kappa,2,d)}
 }{\int_{\mathbb{R}^d}
-q(z \mid x)^{1 + \frac{\kappa}{1+\kappa d/2}}
+q(z \mid x)^{\iota(\kappa,2,d)}
 \, dz},
 \end{equation}
-with mean $\tilde{\mu}_q = \mu_q \in \mathbb{R}^d$, positive definite scale matrix $\widetilde{\mathbf{\Sigma}}_q \in \mathbb{R}^{d \times d}$ and nonlinear statistical coupling
+with mean $\tilde{\mu}_q = \mu_q \in \mathbb{R}^d$, positive definite scale matrix $\widetilde{\boldsymbol{\Sigma}}_q \in \mathbb{R}^{d \times d}$ and nonlinear statistical coupling
 \[
 \tilde{\kappa} = \frac{\kappa}{1+\kappa}.
 \]
 Define the centered variable $y_q= z - \mu_q$. Then,
 \[
-\mathbb{E}_{q/^{\iota(\kappa,d_2)}(\textbf{z}\mid \textbf{x})}
+\mathbb{E}_{q/^{\iota(\kappa,2,d)}(\textbf{z}\mid \textbf{x})}
 \!\left[y_q y_q^\intercal\right]
-=\Sigma_q,
+=\boldsymbol{\Sigma}_q,
 \]
 and consequently,
 \[
-\mathbb{E}_{q/^{\iota(\kappa,d_2)}(\textbf{z}\mid \textbf{x})}
-\!\left[y_q^\intercal \Sigma_q^{-1} y_q\right]=d.
+\mathbb{E}_{q/^{\iota(\kappa,2,d)}(\textbf{z}\mid \textbf{x})}
+\!\left[y_q^\intercal \boldsymbol{\Sigma}_q^{-1} y_q\right]=d.
 \]
 \end{lemma}
 
 \begin{proof}
 The coupled Gaussian density of the centered variable $y_q = z-\mu_q$ is
 \[
-q/^{\iota(\kappa,d_2)}(\textbf{z}\mid \textbf{x})
+q/^{\iota(\kappa,2,d)}(\textbf{z}\mid \textbf{x})
 =
 Z_q^{-1}
 \left(
-1 + \kappa\, \Bigl[\tfrac{1}{2}y_q^\intercal \Sigma_q^{-1} y_q\Bigr]
+1 + \kappa\, \Bigl[\tfrac{1}{2}y_q^\intercal \boldsymbol{\Sigma}_q^{-1} y_q\Bigr]
 \right)^{-\gamma_1},
 \quad
 \gamma_1 \equiv \frac{1+\kappa(d+2)/2}{\kappa},
 \]
-where $Z_q = \tilde{Z}_q$ denotes the normalization constant as calculated in Lemma \ref{Normalization}, given by Eq.\eqref{Q_partition_function}, and $\kappa=\tilde{\kappa}$. Using the identity $a^\intercal M a = \operatorname{Tr}(M a a^\intercal)$,
+where $Z_q = \tilde{Z}_q = Z(\widetilde{\boldsymbol{\Sigma}}_q,\tilde\kappa)$ denotes the normalization constant as calculated in Lemma \ref{Normalization}, given by Eq.\eqref{Q_partition_function}. The density is written here with the original $\kappa$ and $\boldsymbol{\Sigma}_q$, which give the same function as $\tilde\kappa$ and $\widetilde{\boldsymbol{\Sigma}}_q$. Using the identity $a^\intercal M a = \operatorname{Tr}(M a a^\intercal)$,
 we calculate the expectation over the independent-equals distribution as
 \begin{equation} \label{1th_stamente,lemma2}
-    \mathbb{E}_{q/^{\iota(\kappa,d_2)}(\textbf{z}\mid \textbf{x})}\!\left[y_q^\intercal \Sigma_q^{-1} y_q\right]
+    \mathbb{E}_{q/^{\iota(\kappa,2,d)}(\textbf{z}\mid \textbf{x})}\!\left[y_q^\intercal \boldsymbol{\Sigma}_q^{-1} y_q\right]
 =
 \operatorname{Tr}
 \!\left(
-\Sigma_q^{-1}\mathbb{E}_{q/^{\iota(\kappa,d_2)}(\textbf{z}\mid \textbf{x})}[y_q y_q^\intercal]
+\boldsymbol{\Sigma}_q^{-1}\mathbb{E}_{q/^{\iota(\kappa,2,d)}(\textbf{z}\mid \textbf{x})}[y_q y_q^\intercal]
 \right),    
 \end{equation}
 where 
 \begin{align}\label{exp}
-\mathbb{E}_{q/^{\iota(\kappa,d_2)}(\textbf{z}\mid \textbf{x})}\left[y_qy_q^{\intercal}\right]
+\mathbb{E}_{q/^{\iota(\kappa,2,d)}(\textbf{z}\mid \textbf{x})}\left[y_qy_q^{\intercal}\right]
 =
 \frac{1}{Z_q}
 \int
 \left(y_q y_q^{\intercal}\right)
 \left(
-1+\kappa\, \Bigl[\tfrac{1}{2}y_q^{\intercal}\Sigma_q^{-1}y_q\Bigr]
+1+\kappa\, \Bigl[\tfrac{1}{2}y_q^{\intercal}\boldsymbol{\Sigma}_q^{-1}y_q\Bigr]
 \right)^{-\gamma_1}
 \,dy_q,
 \end{align}
 is the second-order moment. To compute Eq. \eqref{exp}, we consider the eigen-decomposition of the scale matrix:
 \[
-\Sigma_q^{-1} = U_q \Lambda_q^{-1} U_q^\intercal,
+\boldsymbol{\Sigma}_q^{-1} = U_q \Lambda_q^{-1} U_q^\intercal,
 \]
 where $U_q$ is an orthogonal matrix and $\Lambda_q=\mathrm{diag}(\lambda_{q_1},\dots,\lambda_{q_d})$ is a diagonal matrix. Applying the eigen-decomposition transformation to Eq.\eqref{exp}, we obtain
 \begin{align} \label{exp2}
@@ -1649,13 +1654,13 @@ where $U_q$ is an orthogonal matrix and $\Lambda_q=\mathrm{diag}(\lambda_{q_1},\
 We define the rotated variable $s_q = U_q^\intercal y_q$, %with $ds_q=U_q^\intercal dy_q$. Since $U_q$ is orthogonal, 
 the Jacobian of the transformation is equal to one, implying $ds_q = dy_q$. Under this change of variables, the quadratic form diagonalizes:
 \begin{equation} \label{diag}
-    y_q^\intercal \Sigma_q^{-1} y_q= (U_q^\intercal y_q)^\intercal
+    y_q^\intercal \boldsymbol{\Sigma}_q^{-1} y_q= (U_q^\intercal y_q)^\intercal
 \Lambda_q^{-1}(U_q^\intercal y_q) =  s_q^\intercal \Lambda_q^{-1} s_q =\sum_{r=1}^d \frac{s_{q_r}^2}{\lambda_{q_r}}.
 \end{equation}
 Applying Eq. \eqref{diag} in the Eq. \ref{exp2}, and noting that $y_q = U_q s_q$, we obtain
 \begin{equation}
     \begin{split}
-        \mathbb{E}_{q/^{1+ \frac{\kappa}{1+\kappa d/2}}(\textbf{z}\mid \textbf{x})}[y_q y_q^\intercal]
+        \mathbb{E}_{q/^{\iota(\kappa,2,d)}(\textbf{z}\mid \textbf{x})}[y_q y_q^\intercal]
 & =\frac{1}{Z_q}\int\left(U_qs_qs_q^\intercal U_q^\intercal\right)
 \left(1 + \kappa \Bigl[\tfrac{1}{2}\sum_{r=1}^d \frac{s_{q_r}^2}{\lambda_{q_r}}\Bigr]\right)^{-\gamma_1}ds_q \\ & =U_q\left[\frac{1}{Z_q}\int s_q s_q^\intercal
 \left(1 + \kappa \Bigl[\tfrac{1}{2}\sum_{r=1}^d \frac{s_{q_r}^2}{\lambda_{q_r}}\Bigr]\right)^{-\gamma_1}ds_q\right]
@@ -1703,7 +1708,7 @@ Note that the inner integral inside the brackets factorizes into independent one
 \left[ \prod_{\substack{r=1 \\ r \neq i}}^{d} 
  \int \exp \left( -\tfrac{t\kappa}{2} \frac{s_{q_r}^2}{\lambda_{q_r}} \right ) 
  ds_{q_r} \right]
-\int s_{q_i}^2 \exp \left (-\tfrac{t \kappa}{2} \frac{s_{q_i}^2}{\lambda_{q_i}} \right ) ds_{q_i} \\&=  \left[ \prod_{\substack{r=1 \\ r \neq i}}^{d} \sqrt{\frac{2\pi \lambda_{q_r}}{t \kappa}}\right] \frac{\lambda_{q_i}}{t\kappa}  \sqrt{\frac{2\pi \lambda_{q_i}}{t \kappa}} =  \frac{\sqrt{(2\pi)^d|\Sigma_q|}}{(t\kappa)^{\frac{d+2}{2}}}
+\int s_{q_i}^2 \exp \left (-\tfrac{t \kappa}{2} \frac{s_{q_i}^2}{\lambda_{q_i}} \right ) ds_{q_i} \\&=  \left[ \prod_{\substack{r=1 \\ r \neq i}}^{d} \sqrt{\frac{2\pi \lambda_{q_r}}{t \kappa}}\right] \frac{\lambda_{q_i}}{t\kappa}  \sqrt{\frac{2\pi \lambda_{q_i}}{t \kappa}} =  \frac{\sqrt{(2\pi)^d|\boldsymbol{\Sigma}_q|}}{(t\kappa)^{\frac{d+2}{2}}}
 \lambda_{q_i}. \label{gausInts}
     \end{split}
 \end{equation}
@@ -1716,7 +1721,7 @@ and the resulting matrix is proportional to $\Lambda_q$. Hence, substituting Eq.
 \right)^{-\alpha}
 ds_q
 = %\frac{1}{Z_q}
-\frac{\sqrt{(2\pi)^d|\Sigma_q|}}{\kappa^{\frac{d+2}{2}}}
+\frac{\sqrt{(2\pi)^d|\boldsymbol{\Sigma}_q|}}{\kappa^{\frac{d+2}{2}}}
 \frac{\Gamma\!\left(\gamma_1-\frac{d+2}{2}\right)}
 {\Gamma(\gamma_1)}\lambda_{q_i}.
 \end{equation*}
@@ -1725,22 +1730,22 @@ Therefore, the matrix-valued integral is
 \int s_q s_q^\intercal
 \left(1 + \kappa \Bigl[\tfrac{1}{2}\sum_{r=1}^d \frac{s_{q_r}^2}{\lambda_{q_r}}\Bigr]\right)^{-\gamma_1}ds_q
 = %\frac{1}{Z_q}
-\frac{\sqrt{(2\pi)^d|\Sigma_q|}}{\kappa^{\frac{d+2}{2}}}
+\frac{\sqrt{(2\pi)^d|\boldsymbol{\Sigma}_q|}}{\kappa^{\frac{d+2}{2}}}
 \frac{\Gamma\!\left(\gamma_1-\frac{d+2}{2}\right)}
 {\Gamma(\gamma_1)}\Lambda_q.
 \end{equation}
 Finally, substituting back Eq. \eqref{matrixIntegral_1} to Eq. \eqref{exp3}, we obtain
 \begin{equation} 
 \begin{split}
-    \mathbb{E}_{q/^{1+ \frac{\kappa}{1+\kappa d/2}}(\textbf{z}\mid \textbf{x})}[y_q y_q^\intercal] & = U_q\left(\frac{1}{Z_q}\frac{\sqrt{(2\pi)^d|\Sigma_q|}}{\kappa^{\frac{d+2}{2}}}
+    \mathbb{E}_{q/^{\iota(\kappa,2,d)}(\textbf{z}\mid \textbf{x})}[y_q y_q^\intercal] & = U_q\left(\frac{1}{Z_q}\frac{\sqrt{(2\pi)^d|\boldsymbol{\Sigma}_q|}}{\kappa^{\frac{d+2}{2}}}
 \frac{\Gamma\!\left(\gamma_1-\frac{d+2}{2}\right)}
 {\Gamma(\gamma_1)}\Lambda_q\right)U_q^\intercal\\
-& =  \left(\frac{1}{Z_q}\frac{\sqrt{(2\pi)^d|\Sigma_q|}}{\kappa^{\frac{d+2}{2}}}
+& =  \left(\frac{1}{Z_q}\frac{\sqrt{(2\pi)^d|\boldsymbol{\Sigma}_q|}}{\kappa^{\frac{d+2}{2}}}
 \frac{\Gamma\!\left(\gamma_1-\frac{d+2}{2}\right)}
 {\Gamma(\gamma_1)}\right) U_q\Lambda_q U_q^\intercal\\
-& =\frac{1}{Z_q}\frac{\sqrt{(2\pi)^d|\Sigma_q|}}{\kappa^{\frac{d+2}{2}}}
+& =\frac{1}{Z_q}\frac{\sqrt{(2\pi)^d|\boldsymbol{\Sigma}_q|}}{\kappa^{\frac{d+2}{2}}}
 \frac{\Gamma\!\left(\gamma_1-\frac{d+2}{2}\right)}
-{\Gamma(\gamma_1)} \Sigma_q \label{exp4}
+{\Gamma(\gamma_1)} \boldsymbol{\Sigma}_q \label{exp4}
 \end{split}
 \end{equation}
 Now, substituting the normalization constant given by Eq. \eqref{Q_partition_function}
@@ -1749,7 +1754,7 @@ Z_q
 =
 \frac{\Gamma\!\left(\frac{1}{\kappa}\right)}
 {\Gamma(\gamma_1)}
-\sqrt{\left(\frac{2\pi}{\kappa}\right)^d |\Sigma_q|},
+\sqrt{\left(\frac{2\pi}{\kappa}\right)^d |\boldsymbol{\Sigma}_q|},
 \]
 into Eq. \eqref{exp4} and using the identity $\Gamma(x+1)=x\Gamma(x)$ together with
 \[
@@ -1758,18 +1763,18 @@ into Eq. \eqref{exp4} and using the identity $\Gamma(x+1)=x\Gamma(x)$ together w
 \]
 yields the second moment expectation:
 \begin{equation} \label{secondMomentEQ}
-     \mathbb{E}_{q/^{1+ \frac{\kappa}{1+\kappa d/2}}(\textbf{z}\mid \textbf{x})}[y_q y_q^\intercal] = \Sigma_q,    
+     \mathbb{E}_{q/^{\iota(\kappa,2,d)}(\textbf{z}\mid \textbf{x})}[y_q y_q^\intercal] = \boldsymbol{\Sigma}_q,    
 \end{equation}
 preserving the second moment expectation of the original distribution. Finally, applying Eq.\eqref{secondMomentEQ} to Eq. \eqref{1th_stamente,lemma2}, we calculate 
 \[
 \mathbb{E}\!\left[
-y_q^\intercal\Sigma_q^{-1}y_q
+y_q^\intercal\boldsymbol{\Sigma}_q^{-1}y_q
 \right]
 = \operatorname{tr}\!\left(
-\Sigma_q^{-1}\mathbb{E}[y_q y_q^\intercal]
+\boldsymbol{\Sigma}_q^{-1}\mathbb{E}[y_q y_q^\intercal]
 \right)
 =
-\operatorname{tr}(\Sigma_q^{-1}\Sigma_q)
+\operatorname{tr}(\boldsymbol{\Sigma}_q^{-1}\boldsymbol{\Sigma}_q)
 =
 \operatorname{tr}(I_d)
 =
@@ -1778,7 +1783,7 @@ d.
 \end{proof}
 
 \begin{theorem}[Coupled Free Energy for Multivariate Coupled Gaussian] \label{theorem_CFE}
-Let $\boldsymbol{x} \in \mathbb{R}^d$ and $\mathbf{z} \in \mathbb{R}^d$ be random vectors, and suppose that the posterior $q_{\phi}(\mathbf{z} \mid \boldsymbol{x})$, the prior $p_{\theta}(\mathbf{z})$, and the data $p_\theta(x|z)$ are each multivariate coupled Gaussian with their joint PDFs defined as:
+Let $\boldsymbol{x} \in \mathbb{R}^{d_d}$ and $\mathbf{z} \in \mathbb{R}^d$ be random vectors, and suppose that the posterior $q_{\phi}(\mathbf{z} \mid \boldsymbol{x})$, the prior $p_{\theta}(\mathbf{z})$, and the data $p_\theta(x|z)$ are each multivariate coupled Gaussian with their joint PDFs defined as below, where $d$ is replaced by $d_d$ for densities over the data:
 {\small
 \begin{equation*}
 f\left(\boldsymbol{x}; \boldsymbol{\mu}, \boldsymbol{\Sigma}, \kappa \right) \equiv 
@@ -1805,7 +1810,7 @@ Given a Coupled Variational Autoencoder (CVAE) with $\kappa \neq 0$, the Coupled
 where the coupled divergence is given by
 \begin{equation} \label{divergence}
     D_{\kappa} \left( q_{\phi}(\mathbf{z}|\mathbf{x}) \big\| p_{\theta}(\mathbf{z}) \right)
-    =\mathbb{E}_{\mathbf{z} \sim q_\phi/^{\left(\iota(\kappa,d_2)\right)}}
+    =\mathbb{E}_{\mathbf{z} \sim q_\phi/^{\iota(\kappa,2,d)}}
 \Big[
 \ln_{\kappa}\!\left(p_\theta(\mathbf{z})^{\frac{-1}{1+\kappa d/2}}\right)
 -
@@ -1815,9 +1820,9 @@ where the coupled divergence is given by
 and the coupled reconstruction loss is
 \begin{equation} \label{reconLoss}
     \mathcal{L}_{\kappa} (\boldsymbol{x}) 
-    =\mathbb{E}_{z_\sim q_{\phi}/^{\left(\iota(\kappa,d_2)\right)}(z|x)}
+    =\mathbb{E}_{z_\sim q_{\phi}/^{\iota(\kappa,2,d)}(z|x)}
     \left[
-    \ln_\kappa p_{\theta}(x|z)^{\frac{-1}{1 + \kappa d/2}}
+    \ln_\kappa p_{\theta}(x|z)^{\frac{-1}{1 + \kappa d_d/2}}
     \right], 
 \end{equation}
 where $p_{\theta}(x|z)$ is the decoder network's generative model, represented by a multivariate coupled Gaussian with unitary scale matrix and location given by the reconstructed image. Then, the CFE simplifies to:
@@ -1829,15 +1834,15 @@ where $p_{\theta}(x|z)$ is the decoder network's generative model, represented b
 +\frac{1+\kappa A_p}{2}
 \Big[
 (\boldsymbol{\mu}_p-\boldsymbol{\mu}_q)^\top
-\mathbf{\Sigma}_p^{-1}
+\boldsymbol{\Sigma}_p^{-1}
 (\boldsymbol{\mu}_p-\boldsymbol{\mu}_q)
-+\operatorname{tr}(\mathbf{\Sigma}_p^{-1}\mathbf{\Sigma}_q)
++\operatorname{tr}(\boldsymbol{\Sigma}_p^{-1}\boldsymbol{\Sigma}_q)
 \Big] \\
 &\quad
 - A_q + A_p
-+\mathbb{E}_{\mathbf{z} \sim q_\phi/^{\left(\iota(\kappa,d_2)\right)}}\!\left[\frac{1}{2}
++\mathbb{E}_{\mathbf{z} \sim q_\phi/^{\iota(\kappa,2,d)}}\!\left[\frac{1}{2}
 (\boldsymbol{x}-\bar{\boldsymbol{x}}_{x|z})^\top
-\mathbf{\Sigma}_{x|z}^{-1}
+\boldsymbol{\Sigma}_{x|z}^{-1}
 (\boldsymbol{x}-\bar{\boldsymbol{x}}_{x|z})
 \oplus_\kappa A_{x|z}\right].
 \end{aligned}
@@ -1845,47 +1850,47 @@ where $p_{\theta}(x|z)$ is the decoder network's generative model, represented b
 \end{theorem}
 
 \begin{proof}
-Let's start by calculating the coupled Kullback-Leibler divergence. Let the posterior $q_{\phi}(\mathbf{z} \mid \boldsymbol{x})$ be a multivariate coupled Gaussian with mean $\mu_q$ and scale matrix $\Sigma_q$
+Let's start by calculating the coupled Kullback-Leibler divergence. Let the posterior $q_{\phi}(\mathbf{z} \mid \boldsymbol{x})$ be a multivariate coupled Gaussian with mean $\mu_q$ and scale matrix $\boldsymbol{\Sigma}_q$
 \[
-q_{\phi}(z \mid x) = \left \{ 1+\kappa\left[\tfrac{1}{2}(z-\mu_q)^{\intercal}{\Sigma}_q^{-1}(z-\mu_q) \oplus_\kappa \left(\ln_\kappa\left(\frac{1}{Z_q}\right)^{-\frac{1}{1+d\kappa/2}}\right)\right]\right \}^{-\frac{1+d\kappa/2}{\kappa}},
+q_{\phi}(z \mid x) = \left \{ 1+\kappa\left[\tfrac{1}{2}(z-\mu_q)^{\intercal}\boldsymbol{\Sigma}_q^{-1}(z-\mu_q) \oplus_\kappa \left(\ln_\kappa\left(\frac{1}{Z_q}\right)^{-\frac{1}{1+d\kappa/2}}\right)\right]\right \}^{-\frac{1+d\kappa/2}{\kappa}},
 \]
-and the prior $p_{\theta}(\mathbf{z})$ a multivariate coupled Gaussian with mean $\mu_p$ and scale matrix $\Sigma_p$
+and the prior $p_{\theta}(\mathbf{z})$ a multivariate coupled Gaussian with mean $\mu_p$ and scale matrix $\boldsymbol{\Sigma}_p$
 \[
-p_{\theta}(z) = \left \{ 1+\kappa\left[\tfrac{1}{2}(z-\mu_p)^{\intercal}{\Sigma}_p^{-1}(z-\mu_p) \oplus_\kappa \left(\ln_\kappa\left(\frac{1}{Z_p}\right)^{-\frac{1}{1+d\kappa/2}}\right)\right]\right \} ^{-\frac{1+d\kappa/2}{\kappa}}.
+p_{\theta}(z) = \left \{ 1+\kappa\left[\tfrac{1}{2}(z-\mu_p)^{\intercal}\boldsymbol{\Sigma}_p^{-1}(z-\mu_p) \oplus_\kappa \left(\ln_\kappa\left(\frac{1}{Z_p}\right)^{-\frac{1}{1+d\kappa/2}}\right)\right]\right \} ^{-\frac{1+d\kappa/2}{\kappa}}.
 \]
 
 For simplicity, we set $A_q=\ln_\kappa\left(\frac{1}{Z_q}\right)^{-\frac{1}{1+d\kappa/2}}$. Given the coupled logarithm definition given by Eq. \eqref{coupledLog}, we compute the expectation under the posterior $q_{\phi}(z|x)$ for Eq. \eqref{divergence} as
 \begin{align*}
-   \mathbb{E}_{\mathbf{z} \sim q_\phi/^{1+\frac{\kappa}{1+d\kappa/2}}} \ln_\kappa \left(q_{\phi} (\textbf{z}\mid \textbf{x}) \right)^{\frac{-1}{1+d\kappa/2}} & = \frac{1}{\kappa} \mathbb{E}_{\mathbf{z} \sim q_\phi/^{1+\frac{\kappa}{1+d\kappa/2}}}  \left( \left(q (\textbf{z}\mid \textbf{x}) \right)^{\frac{-\kappa}{1+d\kappa/2}} - 1 \right)\\
-  & = \mathbb{E}_{z \sim q_{\phi}/^{1+\frac{\kappa}{1+d\kappa/2}}}\left[
-\frac{1}{2}(\mathbf{z}-\mu_q)^\intercal\Sigma_q^{-1}(\mathbf{z}-\mu_q)
+   \mathbb{E}_{\mathbf{z} \sim q_\phi/^{\iota(\kappa,2,d)}} \ln_\kappa \left(q_{\phi} (\textbf{z}\mid \textbf{x}) \right)^{\frac{-1}{1+d\kappa/2}} & = \frac{1}{\kappa} \mathbb{E}_{\mathbf{z} \sim q_\phi/^{\iota(\kappa,2,d)}}  \left( \left(q (\textbf{z}\mid \textbf{x}) \right)^{\frac{-\kappa}{1+d\kappa/2}} - 1 \right)\\
+  & = \mathbb{E}_{z \sim q_{\phi}/^{\iota(\kappa,2,d)}}\left[
+\frac{1}{2}(\mathbf{z}-\mu_q)^\intercal\boldsymbol{\Sigma}_q^{-1}(\mathbf{z}-\mu_q)
 \oplus_{\kappa} A_q
 \right].
 \end{align*}
 Using the definition of the coupled sum given by $a \oplus_{\kappa} b = a + b + \kappa ab$, and defining the centered variable be $y_q = \mathbf{z}-\mu_q$, we obtain
 
 \[
-\mathbb{E}_{\mathbf{z} \sim q_\phi/^{1+\frac{\kappa}{1+d\kappa/2}}} \ln_\kappa \left(q_{\phi} (\textbf{z}\mid \textbf{x}) \right)^{\frac{-1}{1+d\kappa/2}}  =
+\mathbb{E}_{\mathbf{z} \sim q_\phi/^{\iota(\kappa,2,d)}} \ln_\kappa \left(q_{\phi} (\textbf{z}\mid \textbf{x}) \right)^{\frac{-1}{1+d\kappa/2}}  =
 \frac{1}{2}(1+\kappa A_q)
-\mathbb{E}_{\mathbf{z} \sim q_\phi/^{1+\frac{\kappa}{1+d\kappa/2}}} \!\left[
-y_q^\intercal\Sigma_q^{-1}y_q
+\mathbb{E}_{\mathbf{z} \sim q_\phi/^{\iota(\kappa,2,d)}} \!\left[
+y_q^\intercal\boldsymbol{\Sigma}_q^{-1}y_q
 \right]
 +A_q.
 \]
 Applying Lemma~\ref{second_moment}, which states that $\mathbb{E}\!\left[
-y_q^\intercal\Sigma_q^{-1}y_q
+y_q^\intercal\boldsymbol{\Sigma}_q^{-1}y_q
 \right] = d$, we get
 
 \begin{equation} \label{posteriorExpectationFinal}
-     \mathbb{E}_{\mathbf{z} \sim q_\phi/^{1+\frac{\kappa}{1+d\kappa/2}}} \ln_\kappa \left(q_{\phi} (\textbf{z}\mid \textbf{x}) \right)^{\frac{-1}{1+d\kappa/2}}  =\frac{d}{2}(1+\kappa A_q)+ A_q.
+     \mathbb{E}_{\mathbf{z} \sim q_\phi/^{\iota(\kappa,2,d)}} \ln_\kappa \left(q_{\phi} (\textbf{z}\mid \textbf{x}) \right)^{\frac{-1}{1+d\kappa/2}}  =\frac{d}{2}(1+\kappa A_q)+ A_q.
 \end{equation}
 
 Similarly, we compute the expectation under the prior $p_{\theta}(z)$ in Eq. \eqref{divergence} as given by
 
 \begin{equation} \label{priorExpectation}
-\mathbb{E}_{\mathbf{z} \sim q_\phi/^{1+\frac{\kappa}{1+d\kappa/2}}}
-\ln_{\kappa}\!\left(p_\theta(\mathbf{z})^{\frac{-1}{1+d\kappa/2}}\right) = \mathbb{E}_{\mathbf{z} \sim q_\phi/^{1+\frac{\kappa}{1+d\kappa/2}}} \left[
-\tfrac{1}{2}(\mathbf{z}-\mu_p)^\intercal\Sigma_p^{-1}(\mathbf{z}-\mu_p)
+\mathbb{E}_{\mathbf{z} \sim q_\phi/^{\iota(\kappa,2,d)}}
+\ln_{\kappa}\!\left(p_\theta(\mathbf{z})^{\frac{-1}{1+d\kappa/2}}\right) = \mathbb{E}_{\mathbf{z} \sim q_\phi/^{\iota(\kappa,2,d)}} \left[
+\tfrac{1}{2}(\mathbf{z}-\mu_p)^\intercal\boldsymbol{\Sigma}_p^{-1}(\mathbf{z}-\mu_p)
 \right] \oplus_{\kappa} A_p,
 \end{equation}
 
@@ -1897,26 +1902,26 @@ which yields
 
 \begin{equation} \label{decomposition}
 \begin{split}
-\mathbb{E}_{\mathbf{z} \sim q_\phi/^{1+\frac{\kappa}{1+d\kappa/2}}} \left[ \tfrac{1}{2}(\mathbf{z}-\mu_p)^\intercal\Sigma_p^{-1}(\mathbf{z}-\mu_p) \right] &= \frac{1}{2}\,\mathbb{E}_{\mathbf{z} \sim q_\phi/^{1+\frac{\kappa}{1+d\kappa/2}}}\left[y_q^\intercal \Sigma_p^{-1} y_q \right] \\
-&\quad + \tfrac{1}{2}(\mu_q-\mu_p)^\intercal \Sigma_p^{-1}(\mu_q-\mu_p).
+\mathbb{E}_{\mathbf{z} \sim q_\phi/^{\iota(\kappa,2,d)}} \left[ \tfrac{1}{2}(\mathbf{z}-\mu_p)^\intercal\boldsymbol{\Sigma}_p^{-1}(\mathbf{z}-\mu_p) \right] &= \frac{1}{2}\,\mathbb{E}_{\mathbf{z} \sim q_\phi/^{\iota(\kappa,2,d)}}\left[y_q^\intercal \boldsymbol{\Sigma}_p^{-1} y_q \right] \\
+&\quad + \tfrac{1}{2}(\mu_q-\mu_p)^\intercal \boldsymbol{\Sigma}_p^{-1}(\mu_q-\mu_p).
 \end{split}
 \end{equation}
 
 \noindent
 Hence, using Lemma~\ref{second_moment} again, we have
 \begin{equation} \label{expectationTrace}
-    \mathbb{E}_{\mathbf{z} \sim q_\phi/^{1+\frac{\kappa}{1+d\kappa/2}}}\left[y_q^\intercal \Sigma_p^{-1} y_q \right]  =  \text{Tr}\left(\Sigma_p^{-1} \mathbb{E}_{\mathbf{z} \sim q_\phi/^{1+\frac{\kappa}{1+d\kappa/2}}} [y_q y_q^\intercal]  \right )  = \text{Tr}\left (\Sigma_p^{-1}\Sigma_q\right).
+    \mathbb{E}_{\mathbf{z} \sim q_\phi/^{\iota(\kappa,2,d)}}\left[y_q^\intercal \boldsymbol{\Sigma}_p^{-1} y_q \right]  =  \text{Tr}\left(\boldsymbol{\Sigma}_p^{-1} \mathbb{E}_{\mathbf{z} \sim q_\phi/^{\iota(\kappa,2,d)}} [y_q y_q^\intercal]  \right )  = \text{Tr}\left (\boldsymbol{\Sigma}_p^{-1}\boldsymbol{\Sigma}_q\right).
 \end{equation}
 Thus, substituting back Eqs. \eqref{expectationTrace}, \eqref{decomposition} to Eq. \eqref{priorExpectation} and applying the coupled summation, we obtain
 \begin{equation} \label{priorExpectationFinal}
 \begin{split}
-     \mathbb{E}_{\mathbf{z} \sim q_\phi/^{1+\frac{\kappa}{1+d\kappa/2}}}
+     \mathbb{E}_{\mathbf{z} \sim q_\phi/^{\iota(\kappa,2,d)}}
 \ln_{\kappa}\!\left(p_\theta(\mathbf{z})^{\frac{-1}{1+d\kappa/2}}\right) = 
 \frac{1+\kappa A_p}{2}
 \Big[
-\operatorname{Tr}(\Sigma_p^{-1}\Sigma_q)
+\operatorname{Tr}(\boldsymbol{\Sigma}_p^{-1}\boldsymbol{\Sigma}_q)
 +
-(\mu_q-\mu_p)^\intercal\Sigma_p^{-1}(\mu_q-\mu_p)
+(\mu_q-\mu_p)^\intercal\boldsymbol{\Sigma}_p^{-1}(\mu_q-\mu_p)
 \Big]
 +
 A_p.
@@ -1928,9 +1933,9 @@ Therefore, combining Eqs. \eqref{posteriorExpectationFinal} and \eqref{priorExpe
 \begin{split}
      D_{\kappa} \left( q_{\phi}(\mathbf{z}|\mathbf{x}) \big\| p_{\theta}(\mathbf{z}) \right) & =  \frac{1+\kappa A_p}{2}
 \left(
-\operatorname{Tr}(\Sigma_p^{-1}\Sigma_q)
+\operatorname{Tr}(\boldsymbol{\Sigma}_p^{-1}\boldsymbol{\Sigma}_q)
 +
-(\mu_q-\mu_p)^\intercal\Sigma_p^{-1}(\mu_q-\mu_p) 
+(\mu_q-\mu_p)^\intercal\boldsymbol{\Sigma}_p^{-1}(\mu_q-\mu_p) 
 \right) \\
 & + A_p - A_q -\frac{d}{2}(1+\kappa A_q).
 \end{split}
@@ -1939,44 +1944,44 @@ Therefore, combining Eqs. \eqref{posteriorExpectationFinal} and \eqref{priorExpe
 Now, we proceed to calculating the coupled reconstruction loss given by Eq. \eqref{reconLoss}. We assume the decoder network's generative model to follow the distribution $p_\theta(x | z) = \mathcal{N}_\kappa(\bar{x}_{x|z}, 1)$, where $\bar{x}_{x|z}$ represents the reconstructed image from the model. That is, the decoder is a multivariate coupled Gaussian with unitary scale matrix and location given by the reconstructed image:
 
 \[
-p_\theta(x|z) =  \left \{ 1+\kappa\left[\tfrac{1}{2}(x-\bar{x}_{x|z})^{\intercal}{\Sigma}_{x|z}^{-1}(x - \bar{x}_{x|z}) \oplus_\kappa \left(\ln_\kappa\left(\frac{1}{Z_{x|z}}\right)^{-\frac{1}{1+d\kappa/2}}\right)\right]\right \} ^{-\frac{1+d\kappa/2}{\kappa}}.
+p_\theta(x|z) =  \left \{ 1+\kappa\left[\tfrac{1}{2}(x-\bar{x}_{x|z})^{\intercal}\boldsymbol{\Sigma}_{x|z}^{-1}(x - \bar{x}_{x|z}) \oplus_\kappa \left(\ln_\kappa\left(\frac{1}{Z_{x|z}}\right)^{-\frac{1}{1+d_d\kappa/2}}\right)\right]\right \} ^{-\frac{1+d_d\kappa/2}{\kappa}}.
 \]
 
-Hence, defining $A_{x|z} = \ln_\kappa\left(\frac{1}{Z_{x|z}}\right)^{-\frac{1}{1+d\kappa/2}}$ and following Eq. \eqref{reconLoss}, we calculate
+Hence, defining $A_{x|z} = \ln_\kappa\left(\frac{1}{Z_{x|z}}\right)^{-\frac{1}{1+d_d\kappa/2}}$ and following Eq. \eqref{reconLoss}, we calculate
 \begin{align*}
-    \mathcal{L}_{\kappa} (\boldsymbol{x}) & =  \mathbb{E}_{z_\sim q_{\phi}/^{1+\frac{\kappa}{1+d\kappa/2}}(z|x)}\ln_\kappa \left(p_{\theta} (\textbf{x}\mid \textbf{z}) \right)^{\frac{-1}{1+d\kappa/2}},\\
-    &= \frac{1}{\kappa}   \mathbb{E}_{z_\sim q_{\phi}/^{1+\frac{\kappa}{1+d\kappa/2}}(z|x)} \left[ \left(p_{\theta} (\textbf{x}\mid \textbf{z}) \right)^{\frac{-\kappa}{1+d\kappa/2}} - 1 \right],\\
-   & =  \mathbb{E}_{z_\sim q_{\phi}/^{1+\frac{\kappa}{1+d\kappa/2}}(z|x)}\left[\frac{1}{2}\left(x-\bar{x}_{x|z}\right)^{\intercal}\mathbf{\Sigma}_{x|z}^{-1}\left(x-\bar{x}_{x|z}\right) \oplus_{\kappa} A_{x|z}\right],
+    \mathcal{L}_{\kappa} (\boldsymbol{x}) & =  \mathbb{E}_{z_\sim q_{\phi}/^{\iota(\kappa,2,d)}(z|x)}\ln_\kappa \left(p_{\theta} (\textbf{x}\mid \textbf{z}) \right)^{\frac{-1}{1+d_d\kappa/2}},\\
+    &= \frac{1}{\kappa}   \mathbb{E}_{z_\sim q_{\phi}/^{\iota(\kappa,2,d)}(z|x)} \left[ \left(p_{\theta} (\textbf{x}\mid \textbf{z}) \right)^{\frac{-\kappa}{1+d_d\kappa/2}} - 1 \right],\\
+   & =  \mathbb{E}_{z_\sim q_{\phi}/^{\iota(\kappa,2,d)}(z|x)}\left[\frac{1}{2}\left(x-\bar{x}_{x|z}\right)^{\intercal}\boldsymbol{\Sigma}_{x|z}^{-1}\left(x-\bar{x}_{x|z}\right) \oplus_{\kappa} A_{x|z}\right],
 \end{align*}
 
-where we used the coupled logarithm definition given by Eq. \eqref{coupledLog}. Thus, replacing the decoder's scale $\Sigma_{x|z}$ by the identity matrix and simplifying, we obtain the coupled reconstruction loss:
+where we used the coupled logarithm definition given by Eq. \eqref{coupledLog}. Thus, replacing the decoder's scale $\boldsymbol{\Sigma}_{x|z}$ by the identity matrix and simplifying, we obtain the coupled reconstruction loss:
 
 \begin{equation*}
-        \mathcal{L}_{\kappa} (\boldsymbol{x})  = \mathbb{E}_{z\sim q_{\phi}/^{1+\frac{\kappa}{1+d\kappa/2}}(z|x)}\left[\frac{1}{2}\left(x-\bar{x}_{x|z}\right)^2 \oplus_\kappa A_{x|z}\right].
+        \mathcal{L}_{\kappa} (\boldsymbol{x})  = \mathbb{E}_{z\sim q_{\phi}/^{\iota(\kappa,2,d)}(z|x)}\left[\frac{1}{2}\left(x-\bar{x}_{x|z}\right)^2 \oplus_\kappa A_{x|z}\right].
 \end{equation*}
 \end{proof}
 
 \begin{lemma}[Standard free energy of coupled Gaussians]
 \label{lemma:standard_free_energy_coupled_gaussians}
-Let $x \in \mathbb{R}^d$ and $z \in \mathbb{R}^d$ be random vectors. Let the approximate posterior $q_{\phi}(z|x)$ and prior $p_{\theta}(z)$ be multivariate coupled Gaussian distributions with a shared coupling parameter $\kappa \neq 0$:
+Let $x \in \mathbb{R}^{d_d}$ and $z \in \mathbb{R}^d$ be random vectors. Let the approximate posterior $q_{\phi}(z|x)$ and prior $p_{\theta}(z)$ be multivariate coupled Gaussian distributions with a shared coupling parameter $\kappa \neq 0$:
 \begin{equation}
-q_{\phi}(z|x) = \frac{1}{Z_{q}} \left( 1 + \kappa (z - \mu_q)^\top \Sigma_q^{-1} (z - \mu_q) \right)^{-\frac{1 + \kappa d/2}{\kappa}},
+q_{\phi}(z|x) = \frac{1}{Z_{q}} \left( 1 + \frac{\kappa}{2} (z - \mu_q)^\top \boldsymbol{\Sigma}_q^{-1} (z - \mu_q) \right)^{-\frac{1 + \kappa d/2}{\kappa}},
 \end{equation}
 \begin{equation}
-p_{\theta}(z) = \frac{1}{Z_{p}} \left( 1 + \kappa (z - \mu_p)^\top \Sigma_p^{-1} (z - \mu_p) \right)^{-\frac{1 + \kappa d/2}{\kappa}}.
+p_{\theta}(z) = \frac{1}{Z_{p}} \left( 1 + \frac{\kappa}{2} (z - \mu_p)^\top \boldsymbol{\Sigma}_p^{-1} (z - \mu_p) \right)^{-\frac{1 + \kappa d/2}{\kappa}}.
 \end{equation}
 When evaluating these distributions under the standard logarithmic scale ($\kappa = 0$), the divergence corresponds to the standard Kullback--Leibler divergence:
 \begin{equation}
 \begin{aligned}
 D_{\kappa=0}[q(z|x) \parallel p(z)] &= \mathbb{E}_{z \sim q(z|x)} \left[ \log q(z|x) - \log p(z) \right] \\
 &= \log Z_p - \log Z_q \\
-&\quad + \frac{1 + \kappa d/2}{\kappa} \mathbb{E}_{z \sim q(z|x)} \left[ \log \left( 1 + \kappa (z - \mu_p)^\top \Sigma_p^{-1} (z - \mu_p) \right) \right. \\
-&\quad \left. - \log \left( 1 + \kappa (z - \mu_q)^\top \Sigma_q^{-1} (z - \mu_q) \right) \right],
+&\quad + \frac{1 + \kappa d/2}{\kappa} \mathbb{E}_{z \sim q(z|x)} \left[ \log \left( 1 + \frac{\kappa}{2} (z - \mu_p)^\top \boldsymbol{\Sigma}_p^{-1} (z - \mu_p) \right) \right. \\
+&\quad \left. - \log \left( 1 + \frac{\kappa}{2} (z - \mu_q)^\top \boldsymbol{\Sigma}_q^{-1} (z - \mu_q) \right) \right],
 \end{aligned}
 \end{equation}
 and the standard reconstruction loss is:
 \begin{equation}
-\mathcal{L}_{\kappa=0}(x) = \mathbb{E}_{z \sim q(z|x)} \left[ -\log Z_{x|z} - \frac{1 + \kappa d/2}{\kappa} \log \left( 1 + \kappa (x - \bar{x}_{x|z})^\top (x - \bar{x}_{x|z}) \right) \right].
+\mathcal{L}_{\kappa=0}(x) = \mathbb{E}_{z \sim q(z|x)} \left[ \log Z_{x|z} + \frac{1 + \kappa d_d/2}{\kappa} \log \left( 1 + \frac{\kappa}{2} (x - \bar{x}_{x|z})^\top (x - \bar{x}_{x|z}) \right) \right].
 \end{equation}
 Because the expectations involve logarithms of quadratic terms integrated over a heavy-tailed density, they do not resolve into a closed algebraic form and require numerical evaluation using Monte Carlo sampling.
 \end{lemma}
@@ -1989,20 +1994,20 @@ D_{\kappa=0}[q(z|x) \parallel p(z)] = \mathbb{E}_{z \sim q(z|x)} \left[ \log q(z
 
 Applying the standard logarithm to the coupled Gaussian posterior density $q_\phi(z|x)$ gives:
 \begin{equation}
-\log q(z|x) = -\log Z_q - \frac{1 + \kappa d/2}{\kappa} \log \left( 1 + \kappa (z - \mu_q)^\top \Sigma_q^{-1} (z - \mu_q) \right).
+\log q(z|x) = -\log Z_q - \frac{1 + \kappa d/2}{\kappa} \log \left( 1 + \frac{\kappa}{2} (z - \mu_q)^\top \boldsymbol{\Sigma}_q^{-1} (z - \mu_q) \right).
 \end{equation}
 
 Similarly, applying the logarithm to the coupled Gaussian prior density $p_\theta(z)$ yields:
 \begin{equation}
-\log p(z) = -\log Z_p - \frac{1 + \kappa d/2}{\kappa} \log \left( 1 + \kappa (z - \mu_p)^\top \Sigma_p^{-1} (z - \mu_p) \right).
+\log p(z) = -\log Z_p - \frac{1 + \kappa d/2}{\kappa} \log \left( 1 + \frac{\kappa}{2} (z - \mu_p)^\top \boldsymbol{\Sigma}_p^{-1} (z - \mu_p) \right).
 \end{equation}
 
 Subtracting $\log p(z)$ from $\log q(z|x)$ produces:
 \begin{equation}
 \begin{aligned}
 \log q(z|x) - \log p(z) &= \log Z_p - \log Z_q \\
-&\quad + \frac{1 + \kappa d/2}{\kappa} \left( \log \left( 1 + \kappa (z - \mu_p)^\top \Sigma_p^{-1} (z - \mu_p) \right) \right. \\
-&\quad \left. - \log \left( 1 + \kappa (z - \mu_q)^\top \Sigma_q^{-1} (z - \mu_q) \right) \right).
+&\quad + \frac{1 + \kappa d/2}{\kappa} \left( \log \left( 1 + \frac{\kappa}{2} (z - \mu_p)^\top \boldsymbol{\Sigma}_p^{-1} (z - \mu_p) \right) \right. \\
+&\quad \left. - \log \left( 1 + \frac{\kappa}{2} (z - \mu_q)^\top \boldsymbol{\Sigma}_q^{-1} (z - \mu_q) \right) \right).
 \end{aligned}
 \end{equation}
 
@@ -2010,12 +2015,12 @@ Taking the expectation with respect to $z \sim q(z|x)$, the constant terms $\log
 
 For the reconstruction loss, we consider a coupled Gaussian decoder likelihood $p_\theta(x|z)$ with mean $\bar{x}_{x|z}$ and normalization factor $Z_{x|z}$:
 \begin{equation}
-p_\theta(x|z) = \frac{1}{Z_{x|z}} \left( 1 + \kappa (x - \bar{x}_{x|z})^\top (x - \bar{x}_{x|z}) \right)^{-\frac{1 + \kappa d/2}{\kappa}}.
+p_\theta(x|z) = \frac{1}{Z_{x|z}} \left( 1 + \frac{\kappa}{2} (x - \bar{x}_{x|z})^\top (x - \bar{x}_{x|z}) \right)^{-\frac{1 + \kappa d_d/2}{\kappa}}.
 \end{equation}
 
-Evaluating the standard expected log-likelihood $\mathcal{L}_{\kappa=0}(x) = \mathbb{E}_{z \sim q(z|x)} \left[ \log p_\theta(x|z) \right]$ gives:
+The standard reconstruction loss is the expected negative log-likelihood, $\mathcal{L}_{\kappa=0}(x) = \mathbb{E}_{z \sim q(z|x)} [ -\log p_\theta(x|z) ]$, which gives:
 \begin{equation}
-\mathcal{L}_{\kappa=0}(x) = \mathbb{E}_{z \sim q(z|x)} \left[ -\log Z_{x|z} - \frac{1 + \kappa d/2}{\kappa} \log \left( 1 + \kappa (x - \bar{x}_{x|z})^\top (x - \bar{x}_{x|z}) \right) \right].
+\mathcal{L}_{\kappa=0}(x) = \mathbb{E}_{z \sim q(z|x)} \left[ \log Z_{x|z} + \frac{1 + \kappa d_d/2}{\kappa} \log \left( 1 + \frac{\kappa}{2} (x - \bar{x}_{x|z})^\top (x - \bar{x}_{x|z}) \right) \right].
 \end{equation}
 \end{proof}
 
@@ -2071,10 +2076,10 @@ Next, applying the limit in the independent-equals distribution, we get
 
 \begin{equation} \label{Q_limit}
    \lim_{\kappa\to0}
-q/^{\iota(\kappa,d_2)}(z \mid x)
-=\lim_{\kappa\to0}\frac{q(z \mid x)^{1 + \frac{\kappa}{1+\kappa d/2}}}
+q/^{\iota(\kappa,2,d)}(z \mid x)
+=\lim_{\kappa\to0}\frac{q(z \mid x)^{\iota(\kappa,2,d)}}
 {\int_{\mathbb{R}^d}
-q(z \mid x)^{1 + \frac{\kappa}{1+\kappa d/2}}
+q(z \mid x)^{\iota(\kappa,2,d)}
 \, dz}
 =\frac{q(z \mid x)}{\int_{\mathbb{R}^d} q(z \mid x) \, dz} = q(z \mid x),
 \end{equation}
@@ -2087,7 +2092,7 @@ where we used the normalization property, $\int_{\mathbb{R}^d} q(z \mid x) \, dz
 D_{\kappa}\left(q_{\phi}(\mathbf{z}|\mathbf{x})
 \big\|p_{\theta}(\mathbf{z})\right)
 & =\lim_{\kappa\to0}
-\mathbb{E}_{\mathbf{z} \sim q_\phi/^{\iota(\kappa,d_2)}}
+\mathbb{E}_{\mathbf{z} \sim q_\phi/^{\iota(\kappa,2,d)}}
 \Big[\ln_{\kappa}\!\left(
 p_\theta(\mathbf{z})^{\frac{-1}{1+\kappa d/2}}
 \right) - \ln_{\kappa}\!\left(
@@ -2117,8 +2122,8 @@ Similarly, the reconstruction term from Eq. \eqref{reconLoss} becomes
 \mathcal{L}_\kappa(x)
 & =
 \lim_{\kappa\to0}
-\mathbb{E}_{z\sim q_{\phi}/^{\iota(\kappa,d_2)}(z|x)}
-\left[\ln_\kappa p_{\theta}(x|z)^{\frac{-1}{1+\kappa d/2}}
+\mathbb{E}_{z\sim q_{\phi}/^{\iota(\kappa,2,d)}(z|x)}
+\left[\ln_\kappa p_{\theta}(x|z)^{\frac{-1}{1+\kappa d_d/2}}
 \right]
 \\
 & = \mathbb{E}_{z\sim q(z \mid x)}
@@ -2173,43 +2178,43 @@ Thus, $D_{\kappa,\text{min}} = 0$ for all $\kappa \ge 0$. In particular, this re
 
 \begin{theorem}
 \label{thm:bending_surface_d_dim}
-Let $\mathbf{x} \in \mathbb{R}^d$ and let $f\left(\mathbf{x};\boldsymbol{\mu},\boldsymbol{\Sigma},\kappa\right)$ be the probability density function of the $d$-dimensional generalized normal distribution with mean vector $\boldsymbol{\mu}$, positive-definite scale matrix $\mathbf{\Sigma}$, and nonlinear statistical coupling $\kappa > 0$. Using the stretching parameter $\alpha=2$, let $R(\kappa,2,d) = \iota(\kappa,2,d)-1=\frac{\kappa}{1 + \kappa d/2}$ denote the inverse of the relative risk aversion. The density is given by
+Let $\mathbf{x} \in \mathbb{R}^d$ and let $f\left(\mathbf{x};\boldsymbol{\mu},\boldsymbol{\Sigma},\kappa\right)$ be the probability density function of the $d$-dimensional coupled Gaussian distribution with mean vector $\boldsymbol{\mu}$, positive-definite scale matrix $\boldsymbol{\Sigma}$, and nonlinear statistical coupling $\kappa > 0$. Using the stretching parameter $\alpha=2$, let $\iota(\kappa,2,d)-1=\frac{\kappa}{1 + \kappa d/2}$ denote the relative risk aversion. The density is given by
 \begin{equation}
-    f\left(\mathbf{x};\boldsymbol{\mu},\boldsymbol{\Sigma},\kappa\right) = \frac{1}{Z(\mathbf{\Sigma}, \kappa)} \left( 1 + \frac{\kappa}{2} (\mathbf{x} - \boldsymbol{\mu})^\intercal \mathbf{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu}) \right)^{-1/R(\kappa,2,d)}.
+    f\left(\mathbf{x};\boldsymbol{\mu},\boldsymbol{\Sigma},\kappa\right) = \frac{1}{Z(\boldsymbol{\Sigma}, \kappa)} \left( 1 + \frac{\kappa}{2} (\mathbf{x} - \boldsymbol{\mu})^\intercal \boldsymbol{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu}) \right)^{-1/(\iota(\kappa,2,d)-1)}.
 \end{equation}
-Let $r = \sqrt{(\mathbf{x} - \boldsymbol{\mu})^\intercal \mathbf{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu})}$ denote the Mahalanobis distance from the mean. On a log-log radial profile plot defined by the coordinates $\delta = \ln r$ and $Y = \ln\left(f\left(r;\boldsymbol{\mu},\boldsymbol{\Sigma},\kappa\right)\right)$, the locus of maximum curvature occurs exactly on the hyperellipsoidal surface defined by
+Let $r = \sqrt{(\mathbf{x} - \boldsymbol{\mu})^\intercal \boldsymbol{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu})}$ denote the Mahalanobis distance from the mean. On a log-log radial profile plot defined by the coordinates $\delta = \ln r$ and $Y = \ln\left(f\left(r;\boldsymbol{\mu},\boldsymbol{\Sigma},\kappa\right)\right)$, the locus of maximum curvature occurs exactly on the hyperellipsoidal surface defined by
 \begin{equation}
-    (\mathbf{x} - \boldsymbol{\mu})^\intercal \mathbf{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu}) = \frac{2}{\kappa}.
+    (\mathbf{x} - \boldsymbol{\mu})^\intercal \boldsymbol{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu}) = \frac{2}{\kappa}.
 \end{equation}
 \end{theorem}
 
 \begin{proof}
 We can express the density function radially in terms of the Mahalanobis distance $r$:
 \begin{equation}
-    f(r) = C \left( 1 + \frac{\kappa}{2} r^2 \right)^{-1/R(\kappa,d)},
+    f(r) = C \left( 1 + \frac{\kappa}{2} r^2 \right)^{-1/(\iota(\kappa,2,d)-1)},
 \end{equation}
-where $C = \frac{1}{Z(\mathbf{\Sigma}, \kappa)}$. By substituting $r = e^\delta$, the log-transformed radial profile is
+where $C = \frac{1}{Z(\boldsymbol{\Sigma}, \kappa)}$. By substituting $r = e^\delta$, the log-transformed radial profile is
 \begin{equation}
-    Y(\delta) = \ln C - \frac{1}{R(\kappa,d)} \ln\left(1 + \frac{\kappa}{2} e^{2\delta}\right).
+    Y(\delta) = \ln C - \frac{1}{\iota(\kappa,2,d)-1} \ln\left(1 + \frac{\kappa}{2} e^{2\delta}\right).
 \end{equation}
 Define the substitution variable $u = \frac{\kappa}{2} e^{2\delta}$, noting that $\frac{du}{d\delta} = 2u$. Using the chain and quotient rules, the first and second derivatives of the profile with respect to $\delta$ are:
 \begin{equation}
-    \frac{dY}{d\delta} = -\frac{2}{R(\kappa,d)} \frac{u}{1+u}, \quad \quad \frac{d^2Y}{d\delta^2} = -\frac{4}{R(\kappa,d)} \frac{u}{(1+u)^2}.
+    \frac{dY}{d\delta} = -\frac{2}{\iota(\kappa,2,d)-1} \frac{u}{1+u}, \quad \quad \frac{d^2Y}{d\delta^2} = -\frac{4}{\iota(\kappa,2,d)-1} \frac{u}{(1+u)^2}.
 \end{equation}
-Because $R > 0$ (since $\kappa > 0$) and $u > 0$ for all $r > 0$, the profile is strictly concave down ($\frac{d^2Y}{d\delta^2} < 0$). The point of maximum curvature is found by maximizing the absolute value of the second derivative with respect to $u$:
+Because $\iota(\kappa,2,d)-1 > 0$ (since $\kappa > 0$) and $u > 0$ for all $r > 0$, the profile is strictly concave down ($\frac{d^2Y}{d\delta^2} < 0$). The point of maximum curvature is found by maximizing the absolute value of the second derivative with respect to $u$:
 \begin{equation}
-    \frac{d}{du} \left| \frac{d^2Y}{d\delta^2} \right| = \frac{4}{R(\kappa,d)} \frac{1 - u}{(1+u)^3}.
+    \frac{d}{du} \left| \frac{d^2Y}{d\delta^2} \right| = \frac{4}{\iota(\kappa,2,d)-1} \frac{1 - u}{(1+u)^3}.
 \end{equation}
 Setting this to zero yields $u = 1$. Substituting the definition of $u$ back into this result, we solve for the critical Mahalanobis distance $r$:
 \begin{equation}
     \frac{\kappa}{2} r^2 = 1 \implies r^2 = \frac{2}{\kappa}.
 \end{equation}
-Substituting the definition of the squared Mahalanobis distance $r^2$, the locus of maximum curvature is the hyperellipsoid given by $(\mathbf{x} - \boldsymbol{\mu})^\intercal \mathbf{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu}) = \frac{2}{\kappa}$.
+Substituting the definition of the squared Mahalanobis distance $r^2$, the locus of maximum curvature is the hyperellipsoid given by $(\mathbf{x} - \boldsymbol{\mu})^\intercal \boldsymbol{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu}) = \frac{2}{\kappa}$.
 \end{proof}
 
 \begin{corollary}
 \label{cor:bending_point_1d}
-For the 1-dimensional physical right tail ($d=1$, $x > \mu$), the scale matrix simplifies to a scalar variance $\mathbf{\Sigma} = \sigma^2$. The locus of maximum curvature reduces to a single point
+For the 1-dimensional physical right tail ($d=1$, $x > \mu$), the scale matrix simplifies to a scalar squared scale $\boldsymbol{\Sigma} = \sigma^2$. The locus of maximum curvature reduces to a single point
 \begin{equation}
     x = \mu + \sigma \sqrt{\frac{2}{\kappa}}.
 \end{equation}
@@ -2225,25 +2230,25 @@ Taking the square root yields $|x - \mu| = \sigma \sqrt{\frac{2}{\kappa}}$. Rest
 
 \begin{corollary}
 \label{cor:independent_equals_invariance}
-Let $f/^{\iota(\kappa,d_2)}\left(\mathbf{x};\tilde{\boldsymbol{\mu}},\widetilde{\boldsymbol{\Sigma}},\tilde{\kappa}\right)$ be the independent-equals distribution derived from the generalized normal distribution via exponentiation and renormalization, possessing the coupled parameters $\tilde{\boldsymbol{\mu}} = \boldsymbol{\mu}$, $\widetilde{\mathbf{\Sigma}} = \frac{\mathbf{\Sigma}}{1+\kappa}$, and $\tilde{\kappa} = \frac{\kappa}{1+\kappa}$. The $d$-dimensional bending surface and the 1-dimensional bending point of the independent-equals distribution are geometrically identical to those of the original distribution.
+Let $f/^{\iota(\kappa,2,d)}\left(\mathbf{x};\tilde{\boldsymbol{\mu}},\widetilde{\boldsymbol{\Sigma}},\tilde{\kappa}\right)$ be the independent-equals distribution derived from the coupled Gaussian distribution via exponentiation and renormalization, possessing the coupled parameters $\tilde{\boldsymbol{\mu}} = \boldsymbol{\mu}$, $\widetilde{\boldsymbol{\Sigma}} = \frac{\boldsymbol{\Sigma}}{1+\kappa}$, and $\tilde{\kappa} = \frac{\kappa}{1+\kappa}$. The $d$-dimensional bending surface and the 1-dimensional bending point of the independent-equals distribution are geometrically identical to those of the original distribution.
 \end{corollary}
 
 \begin{proof}
 By Theorem \ref{thm:bending_surface_d_dim}, the bending surface for the independent-equals distribution occurs at:
 \begin{equation}
-    (\mathbf{x} - \tilde{\boldsymbol{\mu}})^\intercal \widetilde{\mathbf{\Sigma}}^{-1} (\mathbf{x} - \tilde{\boldsymbol{\mu}}) = \frac{2}{\tilde{\kappa}}.
+    (\mathbf{x} - \tilde{\boldsymbol{\mu}})^\intercal \widetilde{\boldsymbol{\Sigma}}^{-1} (\mathbf{x} - \tilde{\boldsymbol{\mu}}) = \frac{2}{\tilde{\kappa}}.
 \end{equation}
-Substituting the coupled parameters $\tilde{\boldsymbol{\mu}} = \boldsymbol{\mu}$, $\widetilde{\mathbf{\Sigma}} = \frac{\mathbf{\Sigma}}{1+\kappa}$, and $\tilde{\kappa} = \frac{\kappa}{1+\kappa}$ into this equation yields:
+Substituting the coupled parameters $\tilde{\boldsymbol{\mu}} = \boldsymbol{\mu}$, $\widetilde{\boldsymbol{\Sigma}} = \frac{\boldsymbol{\Sigma}}{1+\kappa}$, and $\tilde{\kappa} = \frac{\kappa}{1+\kappa}$ into this equation yields:
 \begin{equation}
-    (\mathbf{x} - \boldsymbol{\mu})^\intercal \left( \frac{\mathbf{\Sigma}}{1+\kappa} \right)^{-1} (\mathbf{x} - \boldsymbol{\mu}) = \frac{2}{\left(\frac{\kappa}{1+\kappa}\right)}.
+    (\mathbf{x} - \boldsymbol{\mu})^\intercal \left( \frac{\boldsymbol{\Sigma}}{1+\kappa} \right)^{-1} (\mathbf{x} - \boldsymbol{\mu}) = \frac{2}{\left(\frac{\kappa}{1+\kappa}\right)}.
 \end{equation}
 Factoring out the scalar multipliers on both sides:
 \begin{equation}
-    (1+\kappa) (\mathbf{x} - \boldsymbol{\mu})^\intercal \mathbf{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu}) = \frac{2(1+\kappa)}{\kappa}.
+    (1+\kappa) (\mathbf{x} - \boldsymbol{\mu})^\intercal \boldsymbol{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu}) = \frac{2(1+\kappa)}{\kappa}.
 \end{equation}
 Dividing both sides by $(1+\kappa)$, we recover the exact bending surface of the original distribution:
 \begin{equation}
-    (\mathbf{x} - \boldsymbol{\mu})^\intercal \mathbf{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu}) = \frac{2}{\kappa}.
+    (\mathbf{x} - \boldsymbol{\mu})^\intercal \boldsymbol{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu}) = \frac{2}{\kappa}.
 \end{equation}
 Consequently, for the 1-dimensional physical right tail ($d=1$, $x > \mu$), evaluating the specific coupled point $x = \tilde{\mu} + \tilde{\sigma} \sqrt{\frac{2}{\tilde{\kappa}}}$ simplifies as follows:
 \begin{equation}
