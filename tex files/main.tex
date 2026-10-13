@@ -141,7 +141,7 @@ However, the BGS framework relies on the assumption that a system exists in equi
 
 Modeling these non-exponential distributions requires separating uncertainty into two categories: ``known unknowns," represented by a scale parameter (such as the standard deviation in the exponential family), and ``unknown unknowns," represented by the tail-decay shape. These unknown unknowns generally arise from three factors: intrinsic nonlinear fluctuations in the data, limited sample sizes that reduce degrees of freedom, and the practical requirement that a model remain robust to out-of-distribution events. While extreme cases with vanishing scale parameters yield pure power-law \citep{clausetPowerLawDistributionsEmpirical2009} or scale-free models \citep{barabasiScaleFreeNetworksDecade2009}, most phenomena require both a scale and a shape, leading to non-exponential distributions such as the generalized Pareto \citep{arnoldParetoDistribution2015} and Student's t \citep{pearsonStudentsCollectedPapers1942}.
 
-In particular, real-world data often exhibits extreme heavy-tailed behavior, in which the variance, and even the mean, can become undefined or divergent. This is readily observed in the daily log-returns of low-liquidity markets, such as the emerging trade cryptocurrencies and digital assets including Bitcoin, Ethereum, and Solana \citep{szczygielskiOneShapeFits2020, shanaevFittingReturnFitting2021}. Other complex phenomena include hydro-meteorological extremes, turbulent flows, and biological scale-free networks \citep{koutsoyiannisUncertaintyEntropyScaling2005, gisigerScaleInvarianceBiology2001}. Conversely, traditional generative models implicitly assume finite variance and, when faced with extreme data featuring divergent second moments, classical estimators crash or fail to map the true underlying topology, causing standard VI methods to fail \citep{gurbuzbalabanHeavyTailPhenomenonSGD2021}. When applied to such heavy-tailed data, the traditional BGS entropy becomes dominated by the shape of the tail decay, which breaks the fundamental connection between the distribution's scale and its measure of uncertainty \citep{nelsonUniqueUniversalEntropy2026}.
+In particular, real-world data often exhibits extreme heavy-tailed behavior, in which the variance, and even the mean, can become undefined or divergent. This is observed in the size of power outages, earthquakes and solar flares, among many other records of natural and human activity \citep{clausetPowerLawDistributionsEmpirical2009}. Other complex phenomena include hydro-meteorological extremes, turbulent flows, and biological scale-free networks \citep{koutsoyiannisUncertaintyEntropyScaling2005, gisigerScaleInvarianceBiology2001}. Conversely, traditional generative models implicitly assume finite variance and, when faced with extreme data featuring divergent second moments, classical estimators crash or fail to map the true underlying topology, causing standard VI methods to fail \citep{gurbuzbalabanHeavyTailPhenomenonSGD2021}. When applied to such heavy-tailed data, the traditional BGS entropy becomes dominated by the shape of the tail decay, which breaks the fundamental connection between the distribution's scale and its measure of uncertainty \citep{nelsonUniqueUniversalEntropy2026}.
 
 To build machine learning systems capable of robustly learning in extreme environments or datasets, it is necessary to look beyond the classical exponential family. The Rényi and Tsallis entropies, and the Amari $\alpha$-divergence and Wasserstein metric have to date dominated the exploration of cost functions capable of optimizing non-exponential models \citep{kobayashisQVAEDisentangledRepresentation2020,principeInformationTheoreticLearning2010,liRenyiDivergenceVariational2016,amariBackpropagationStochasticGradient1993, tolstikhinWassersteinAutoEncoders2018}.    . Nevertheless these methods are still limited to domains of finite variance \cite{caoCoupledVAEImproved2022}. The $alpha$-divergence function has a discontinuity at $\alpha=1$, which limits its practical utility. The Wasserstein metric has a strong theoretical foundation, but implementations are typically limited to the power 2 case. The Renyi entropy retains the additive information property, while the Tsallis entropy is non-additive. The Tsallis $q$-statistic framework has several misalignments with physical properties that limit its theoretical foundation \citep{nelsonOpenProblemsNonextensive2024}.
 
@@ -155,7 +155,7 @@ The Variational Autoencoder (VAE) \citep{kingmaIntroductionVariationalAutoencode
 
 Recognizing these limitations, some models explicitly introduce heavy-tailed architectures. The $t^3$-VAE \citep{kim$t^3$VariationalAutoencoderLearning2023} incorporates Student's t-distributions and a power divergence metric. While this improves generation in low-density regions, it is restricted to degrees of freedom to $\nu > 2$, enforcing a finite statistical variance and preventing the learning of truly extreme distributions. 
 
-In this paper, we build upon the coupled entropy framework to overcome these limitations by introducing a generalized CVAE architecture that replaces the free energy (KL divergence and log-likelihood reconstruction loss) with the Coupled Free Energy \citep{nelsonUniqueUniversalEntropy2026}. To validate this methodology, we evaluate the model across both standard and extreme datasets. First, we test the CVAE on the CelebA and MNIST image datasets, including corrupted variants, demonstrating improved representation accuracy and robustness to noise compared to traditional Gaussian priors. Second, to test the framework in a truly extreme environment, we apply the CVAE to learn the distributions of daily log-returns for major cryptocurrencies, such as Bitcoin, Ethereum, Solana, Cardano (ADA), Binance Coin (BNB), and Dogecoin, spanning from their inception through late 2025. While the CVAE shows solid structural improvements in image domains, its performance leap is much more pronounced in financial data. Because these cryptocurrency returns inherently exhibit extreme heavy-tailed behavior with divergent variance, standard equilibrium algorithms severely degrade. The CVAE, however, successfully and stably captures these highly volatile distributions, confirming its unique capacity to learn complex systems where classical machine learning fails.
+In this paper, we build upon the coupled entropy framework to overcome these limitations by introducing a generalized CVAE architecture that replaces the free energy (KL divergence and log-likelihood reconstruction loss) with the Coupled Free Energy \citep{nelsonUniqueUniversalEntropy2026}. To validate this methodology, we evaluate the model across both standard and extreme datasets. First, we test the CVAE on the CelebA and MNIST image datasets, including corrupted variants, demonstrating improved representation accuracy and robustness to noise compared to traditional Gaussian priors. Second, to test the framework where the variance does not exist, we apply the CVAE to eight public datasets whose tail index is below 2: storm damage, power outages, earthquake moments, fire insurance claims, Wikipedia page views, solar flares, river flow and health-data breaches.
 
 We build on the recent work of \citep{caoCoupledVAEImproved2022}, which extended the traditional VAE framework into a Coupled Variational Autoencoder (CVAE). The original CVAE demonstrated that replacing the standard VAE loss function with one derived from coupled entropy \citep{nelsonAverageUncertaintySystems2017} improves the generation of synthetic data and increases robustness against corruptions. However, early CVAE implementations sampled directly from a heavy-tailed latent distribution, which caused numerical instabilities for larger coupling values due to divergent variance. We advance this foundation by optimizing the coupled free energy using the independent-equals distribution \citep{al-najafiIndependentApproximatesProvide2026, nelsonVariationalInferenceOptimized2025}, ensuring that the training samples maintain a finite variance even when capturing extreme tail risks.
 
@@ -226,7 +226,7 @@ We validate this relationship experimentally in Figure~\ref{Fig_beta_epochs.png}
 \subsection{Generalized VAE designs utilizing complex systems theory}
 Recent advances in generative modeling for heavy-tailed data have been replacing standard Gaussian assumptions and KL divergence based regularization with tail-robust alternatives. For instance, the $t^3-$Variational Autoencoder \citep{kim$t^3$VariationalAutoencoderLearning2023} uses a multivariate Student’s t latent distribution \citep{abiriVariationalAutoencodersStudents2019,tippingVariationalInferenceStudentt2005} and replaces the KL divergence with a $\gamma$-power divergence \citep{eguchiPowerDivergence2025} which is closely related to the Amari \citep{amariInformationGeometryIts2016, regliAlphaBetaDivergenceVariational2018} information geometry. Similar systems have been generalizations of the VAE have been developed using the Rényi \citep{liRenyiDivergenceVariational2016} and Tsallis entropy \citep{kobayashisQVAEDisentangledRepresentation2020, kobayashiSparseRepresentationLearning2023} functions.  In related research, heavy-tailed diffusion models generalize diffusion and flow frameworks by introducing Student-t priors, tailored perturbation kernels, and the $\gamma$-divergence objective, yielding controllable tail generation with minimal changes to standard pipelines \citep{pandeyHeavyTailedDiffusionModels2024}. 
 
-These approaches enable computationally tractable mechanisms to learn from heavy-tailed distributions, supporting generative modeling beyond the Gaussian paradigm while preserving training stability. However, a key limitation is that these formulations assume that the degrees of freedom satisfy $\nu>2$, corresponding to the finite-variance regime. On the other hand, comprehensive review studies have shown that real-world data, such as cryptocurrency daily log-returns, often have infinite theoretical variance, that is, an undefined second moment, and in some cases, they yield even an undefined mean or first moment \citep{shanaevFittingReturnFitting2021, szczygielskiOneShapeFits2020}. 
+These approaches enable computationally tractable mechanisms to learn from heavy-tailed distributions, supporting generative modeling beyond the Gaussian paradigm while preserving training stability. However, a key limitation is that these formulations assume that the degrees of freedom satisfy $\nu>2$, corresponding to the finite-variance regime. On the other hand, empirical studies have shown that real-world data, such as the size of power outages, earthquakes and solar flares, often follow power laws with infinite variance, and in some cases an infinite mean \citep{clausetPowerLawDistributionsEmpirical2009}.
 
 In this report, we report on a significant advance in the architecture of the Coupled Variational Autoencoder (CVAE) \citep{caoCoupledVAEImproved2022, chenUseStudentsTDistribution2020}. The original CVAE designs was similar to the methods using a Student's t latent distribution objective and a generalized free energy in that it allowed for training of models within the domain of well-defined means. The new architecture for the CVAE \citep{nelsonVariationalInferenceOptimized2025} utilizes an expectation over the independent-equals latent distribution, which assures that the training samples have finite variance even as the nonlinear statistical coupling of the latent distribution goes to infinity.  This capability is a unique capability of coupled entropy function \citep{nelsonUniqueUniversalEntropy2026}, which separates the nonlinear and linear sources of uncertainty.  Our method enables more precise risk engines that accurately capture tail-risk events, such as emerging markets, catastrophic losses. More broadly, the methods will be applicable in predictive coding and active inference designs in which inference is completed at individual nodes with limited data.
 
@@ -548,7 +548,7 @@ This simplification needs the coupling of the metric to match the coupling of th
 
 \section{Experimental Methods} \label{sec:methods}
 
-The experiments evaluate the Coupled Variational Autoencoder (CVAE) across standard image datasets (CelebA and MNIST) and extreme financial data (cryptocurrency daily log-returns). The primary purpose is to build a generative model capable of learning in extreme environments where the data exhibits heavy tails and diverging first or second moments. To build a robust model, the CVAE uses the Coupled Free Energy loss function, which enables the neural network's decoder to act as a nonlinear amplifier, processing compact, stable latent vectors and projecting them into extreme, heavy-tailed data outputs.
+The experiments evaluate the Coupled Variational Autoencoder (CVAE) across standard image datasets (CelebA and MNIST) and eight real-world datasets with infinite variance (Section~\ref{sec:heavytail_data}). The primary purpose is to build a generative model capable of learning in extreme environments where the data exhibits heavy tails and diverging first or second moments. To build a robust model, the CVAE uses the Coupled Free Energy loss function, which enables the neural network's decoder to act as a nonlinear amplifier, processing compact, stable latent vectors and projecting them into extreme, heavy-tailed data outputs.
 
 The coupled divergence is computed in closed form from the encoder outputs and needs no samples. The coupled reconstruction loss is an average over the independent-equals posterior of a quantity that passes through the decoder, so we estimate it by Monte Carlo. For each input, we draw $S$ latent samples from $q_\phi/^{\iota(\kappa,2,d)}(\mathbf{z}\mid\mathbf{x})$, decode each one, and compute its reconstruction loss in closed form from the decoder output, so $\mathbf{x}$ itself is not sampled. The loss is averaged over the $S$ samples and the batch before the weights are updated by backpropagation.
 
@@ -1090,68 +1090,6 @@ $10^{6}$     & \textcolor{blue}{1\%} & \textcolor{blue}{3(8)\%} & \textcolor{blu
 \end{table}
 
 
-\subsection{Learning Cryptocurrencies Extreme Distributions}
-
-Here, we fit coupled Gaussians to the daily log returns of Bitcoin, Ethereum, Dogecoin, ADA, Binance coins, and Solana, and show that the distributions with optimal Hyvärinen score matching yield coupling $\kappa > 0.5$, which implies $\nu = 1/\kappa < 2$, with undefined variance. In particular, our estimates also indicate that the daily log returns of Bitcoin, Ethereum, Dogecoin, and Binance coins have $\kappa > 1$, so that $\nu = 1/\kappa < 1$, and even the mean is undefined. Therefore, the undefined moments of these distributions provide significant challenges for generative models to efficiently and stably learn them. 
-
-To show the ability of the CVAE generative model to learn the tails of real-world distributions in which the variance has gone to infinity, we obtained daily log returns from six major cryptocurrencies, including Bitcoin, Ethereum, Ada, Solana, Binance, and Doge through the Yahoo Finance provider. For each asset, we computed the log-return series $r_t = \log(p_t/p_{t-1})$ from the earliest available date up to 2025-12-02.
-
-To characterize the empirical distribution of returns, we fitted both a classical Gaussian model and a coupled ($\kappa$-)Gaussian distribution using Hyv\"arinen score matching. This score minimizes the Fisher divergence between the model's and the data's scores, providing an efficient computational estimate for complex, non-Gaussian models, such as coupled Gaussians. 
-
-Across all assets, the $\kappa$-Gaussian consistently achieved lower Hyv\"arinen scores than the Gaussian benchmark, indicating strong deviations from normality. Additionally, the estimated $\kappa$ values were above 0.5, indicating that the distribution of log-returns has an undefined variance. 
-
-
-
-
-nonzero,  These results justify using a generative model with heavy-tailed latent structure, such as a coupled VAE, for modelling cryptocurrency returns.
-
-
-\begin{table}[ht!]
-\centering
-\renewcommand{\arraystretch}{1.25}
-\setlength{\tabcolsep}{3.5pt}
-\small
-\begin{tabular}{lccccccc}
-\toprule
-\rowcolor{gray!20}
-\textbf{Asset} & \textbf{Start} & \textbf{End} &
-$\boldsymbol{\mu_\kappa}$ & $\boldsymbol{\sigma_\kappa}$ &
-$\boldsymbol{\kappa}$ & $\boldsymbol{\text{Hyv}_\kappa}$ &
-$\boldsymbol{\text{Hyv}_{\text{norm}}}$  \\
-\midrule
-ADA-USD & 2017-11-10 & 2025-12-02 &
-$-2.49\times10^{-4}$ & 0.03902 & 0.60328 & $-288.02$ & $-0.1883$ \\
-
-BNB-USD & 2017-11-10 & 2025-12-02 &
-$1.49\times10^{-4}$ & 0.01993 & 1.15519 & $-591.02$ & $-0.2753$ \\
-
-BTC-USD & 2014-09-18 & 2025-12-02 &
-$3.95\times10^{-5}$ & 0.01185 & 1.51671 & $-1159.88$ & $-0.3876$  \\
-
-iDOGE-USD & 2017-11-10 & 2025-12-02 &
-0.00102 & 0.01677 & 1.88868 & $-436.08$ & $-0.1452$  \\
-
-ETH-USD & 2017-11-10 & 2025-12-02 &
-$-2.38\times10^{-4}$ & 0.02326 & 1.06709 & $-483.79$ & $-0.3268$ \\
-
-SOL-USD & 2020-04-11 & 2025-12-02 &
-$-0.00309$ & 0.05044 & 0.52150 & $-191.82$ & $-0.2343$  \\
-\bottomrule
-\end{tabular}
-\caption{\textcolor{red}{update}Hyvärinen score matching estimation of the $\kappa$-Gaussian distribution for daily log-returns of major crypto assets. Unlike standard likelihood-based fits, the Hyvärinen method does not require a normalized density and therefore accommodates heavy tails without numerical instability. The table reports the fitted location $\mu_\kappa$, scale $\sigma_\kappa$, and coupling parameter $\kappa$, along with the Hyvärinen scores for both the $\kappa$-Gaussian and the ordinary Gaussian baseline. Larger negative values indicate better fit.}
-\label{tab:kappa_crypto_hyv}
-\end{table}
-
-\begin{figure}[ht!]
-	\begin{center}
-		\includegraphics[width= \linewidth]{Fig_Crypto_Distro_Combined.png} 
-		\begin{center}
-            \caption{\textcolor{red}{update}Comparison between the normal Gaussian and the Coupled Gaussian fits to the empirical distribution of 6 different cryptocurrencies log returns, including (a) ADA, (B) Binance coin, (c) Bitcoin, (d) Doge coin, (e) Ethereum and (f) Solana. The inset displays the mono-log plot, highlighting the heavy-tailed nature of the data, captured bu the Coupled Gaussian fit but underestimated by the standard Gaussian.} 
-		\label{Fig_Crypto_Distributions.png}
-		\end{center}
-	\end{center}
-\end{figure}
-
 Heavy tails break classical moment estimators.
 
 \begin{itemize}
@@ -1169,6 +1107,51 @@ Finite-variance estimation for machine learning;  Tractable training of complex 
 		\label{Fig_Sequential_means.png}
 		\end{center}
 	\end{center}
+\end{figure}
+
+\subsection{Real-World Data with Infinite Variance}\label{sec:heavytail_data}
+
+To test the CVAE where the variance does not exist, we collected eight public datasets from different applications. For each one we estimate the tail index $\alpha$, defined by $P(|X|>t)\sim t^{-\alpha}$, with the Hill estimator on the $k=200$ largest values \citep{resnickHeavyTailPhenomenaProbabilistic2007,clausetPowerLawDistributionsEmpirical2009}. The variance is infinite when $\alpha<2$ and the mean is infinite when $\alpha<1$. All eight datasets have $\alpha<2$, and three of them have $\alpha<1$. Since the coupled Gaussian has tail $|x|^{-(2/\kappa+1)}$, a tail index $\alpha$ corresponds to $\kappa=2/\alpha$, so every dataset needs $\kappa>1$.
+
+The CVAE learns a distribution on the real line, so each dataset is turned into one signed variable. Six datasets are records of separate events, each with a positive size. We divide each size by the median size and multiply it by a random sign (seed 42). The sign makes the distribution symmetric and does not change the tail index. Two datasets are time series, where consecutive values are strongly related. For these we take the difference between consecutive records, subtract its median and divide by its median absolute deviation (MAD). In both cases the result has no units, and a typical value is of order one.
+
+We fit the coupled Gaussian with $\mu$ set to the median. The scale $\sigma$ and the coupling $\kappa$ minimize the mean squared error between the log of the empirical survival function $P(|X-\mu|>t)$ and the log of the model survival function, at 300 values of $t$ spaced evenly in $\log t$. This gives the body and the tail similar weight. Maximum likelihood is not used here because the body holds most of the points, and several datasets have many repeated values from rounding, which pull the likelihood fit toward the center. The coupled Gaussian has one shape parameter, so it cannot follow a wide body and a straight tail at the same time. When the body is wide, the fitted $\kappa$ ends up above $2/\alpha$. For this reason the claim of infinite variance rests on the Hill estimate, not on the fitted $\kappa$. Table~\ref{tab:heavytail_fit} also gives the error of a fit that fixes $\kappa=2/\alpha$ and matches the tail at the 200th largest value. That fit follows the far tail but misses the body, and its error is larger for every dataset.
+
+The datasets and their details are as follows. (a) Storm property damage from the NOAA Storm Events database \citep{nceiStormEventsDatabase2026}, 1996 to 2026, one value per event with nonzero damage. Damages are rounded estimates (such as \$5{,}000 or \$10{,}000), so many values repeat. The Hill estimate also depends on $k$, going from 1.60 at $k=50$ to 0.75 at $k=1000$, so the tail is not a single power law, and this dataset has one of the two largest fit errors. (b) Power outages from the EAGLE-I county records of the United States \citep{brelsfordDatasetRecordedElectricity2024}, grouped into single outages by \citet{sheEventcorrelatedOutageDataset2024}, 2014 to 2023, measured in customer-hours (duration times the mean number of customers out). It is the largest dataset, with 1.4 million outages. (c) Earthquake size as the scalar seismic moment from the Global CMT catalog \citep{dziewonskiDeterminationEarthquakeSource1981,ekstromGlobalCMTProject2012}, 1976 to 2026. We use the moment instead of the magnitude because the magnitude is a logarithm of the energy and has a light tail. The moment is reported with three significant digits, so it has almost no repeated values, and its tail index is below 1. (d) Large claims from a Norwegian fire insurance portfolio, 1972 to 1992 \citep{beirlantPracticalAnalysisExtreme1996}, as distributed with the ReIns package that accompanies \citet{albrecherReinsuranceActuarialStatistical2017}. Its Hill estimate is stable across $k$, and it has the smallest fit error. (e) Daily page views of the Wikipedia article on Donald Trump, July 2015 to September 2026 \citep{wikimediaPageviewsAPI2026}. News events cause sudden jumps in the views, and the daily differences have a tail index below 1. (f) Peak X-ray flux of solar flares observed by the GOES satellites, 1975 to 2016 \citep{nceiGOESXrayFlare2026}. The flux is read from the flare class (a letter and a number), which has two significant digits. We treat flares as events because the difference between consecutive flares has $\alpha$ close to 2. (g) Daily mean flow of the Guadalupe River at Spring Branch, Texas, 1922 to 2026 \citep{usgsWaterDataNation2026}, a river without a dam upstream. Floods make the large differences. Flows are reported with three significant digits, so 6\% of the differences are zero. These have no place on a log axis and are left out of the bars in Figure~\ref{fig:heavytail_distro}, but they are kept in the fit. This dataset has the largest fit error. (h) The number of people affected by each health-data breach reported to the U.S. Department of Health and Human Services \citep{hhsBreachPortal2026}, October 2009 to September 2026. Reports are required only from 500 people up, so the body of the distribution is cut, and the tail index is below 1. The cut also makes the tall bar at the left end of panel (h): with the random sign, the median is $-500/4000$, so breaches of 501 people fall at a distance of $1/4000$ from it.
+
+Figure~\ref{fig:heavytail_distro} compares the fitted coupled Gaussian with a normal distribution that has the sample standard deviation. Since the variance is infinite, the sample standard deviation is set by the few largest values. The normal is then too wide in the body and falls off far too fast in the tail. The coupled Gaussian follows the data over several orders of magnitude. These eight datasets are the targets for training the CVAE in the infinite-variance regime.
+
+\begin{table}[ht!]
+\centering
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\footnotesize
+% Source: ../heavytail_results/fit_table.tsv, written by ../code/heavytail_fit.py
+\begin{tabular}{llrcccccc}
+\toprule
+\rowcolor{gray!20}
+\textbf{Dataset} & \textbf{Input} & $\boldsymbol{n}$ & $\boldsymbol{\alpha}$ & $\boldsymbol{2/\alpha}$ &
+$\boldsymbol{\kappa}$ & $\boldsymbol{\sigma}$ & \textbf{Error} & \textbf{Error}$\boldsymbol{_{2/\alpha}}$ \\
+\midrule
+(a) Storm property damage & event & 409{,}066 & 1.17 & 1.70 & 2.69 & 2.08 & 0.42 & 1.33 \\
+(b) Power outages (EAGLE-I) & event & 1{,}385{,}389 & 1.22 & 1.64 & 1.86 & 1.62 & 0.34 & 0.63 \\
+(c) Earthquake moment & event & 71{,}081 & 0.94 & 2.14 & 2.58 & 1.33 & 0.20 & 0.58 \\
+(d) Norwegian fire claims & event & 9{,}181 & 1.36 & 1.47 & 1.37 & 1.04 & 0.09 & 0.14 \\
+(e) Wikipedia views (Trump) & series & 4{,}109 & 0.88 & 2.27 & 2.02 & 1.29 & 0.16 & 0.23 \\
+(f) Solar flare peak (GOES) & event & 57{,}981 & 1.37 & 1.46 & 1.49 & 1.25 & 0.22 & 0.26 \\
+(g) Guadalupe River flow & series & 38{,}081 & 1.26 & 1.59 & 2.30 & 2.66 & 0.44 & 0.84 \\
+(h) Health-data breach size & event & 8{,}017 & 0.94 & 2.13 & 2.36 & 2.62 & 0.23 & 0.31 \\
+\bottomrule
+\end{tabular}
+\caption{Tail index and coupled Gaussian fit of the eight infinite-variance datasets. $\alpha$ is the Hill estimate on the 200 largest values, and $2/\alpha$ is the coupling it implies. $\kappa$ and $\sigma$ are the whole-curve fit, with $\sigma$ in units of the median (events) or of the MAD (series). Error is the root mean squared error of the log survival function on 300 log-spaced points, for the whole-curve fit and for the fit with $\kappa=2/\alpha$.}
+\label{tab:heavytail_fit}
+\end{table}
+
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[width=\linewidth]{Fig_HeavyTail_Distro.png}
+	\caption{Density of the distance from the median for the eight datasets of Table~\ref{tab:heavytail_fit}, on log-log axes. Bars are the empirical density from 60 log-spaced bins. The red line is the coupled Gaussian fit, and the dashed line is a normal distribution with the sample standard deviation. Values equal to the median are left out of the bars. The tall bar at the left of panel (h) comes from the 500-person reporting limit of the breach data.}
+	\label{fig:heavytail_distro}
 \end{figure}
 
 \subsection{Learned Latent Space}

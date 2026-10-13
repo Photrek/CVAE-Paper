@@ -310,7 +310,7 @@ if execution_mode in [1, 2, 5, 6, 7]:
     if dataset_choice == 1:
         # --- CELEBA DATASET ---
         expected_images = 202599
-        drive_data_folder = '/content/drive/Shareddrives/Photrek & its Partners/Projects/CVAE Paper/celeba_dataset'
+        drive_data_folder = '/content/drive/Shareddrives/Photrek & its Partners/Projects/CVAE Paper/datasets/celeba_dataset'
     
         # Check if images are already extracted locally
         local_jpgs = glob.glob(os.path.join(base_data_directory, "**", "*.jpg"), recursive=True)
@@ -367,7 +367,7 @@ if execution_mode in [1, 2, 5, 6, 7]:
     elif dataset_choice == 2:
         # --- MNIST DATASET ---
         from torchvision.datasets import MNIST
-        mnist_zip_drive = '/content/drive/Shareddrives/Photrek & its Partners/Projects/CVAE Paper/mnist_dataset/mnist_raw_data.zip'
+        mnist_zip_drive = '/content/drive/Shareddrives/Photrek & its Partners/Projects/CVAE Paper/datasets/mnist_dataset/mnist_raw_data.zip'
     
         # Check if raw zip exists on Google Drive to extract locally
         if os.path.exists(mnist_zip_drive) and not os.path.exists(os.path.join(base_data_directory, 'MNIST')):
@@ -1082,6 +1082,8 @@ def execute_standard_free_energy_analysis(model, dataloader, device, kappa, dime
     # A rerun of the same run replaces its row.
     txt_path = results_file("standard_free_energy", "standard_free_energy.txt")
     param_name = "Kappa" if model_choice in (1, 2) else "Beta"
+    # Models 3-4 train with kappa = 0, so their row is keyed by beta, as pipeline_state.py expects.
+    param_value = kappa if model_choice in (1, 2) else beta_val
     header = f"{param_name}\tDim\tSamples\tStandard_Free_Energy\tStandard_Recon_Loss\tStandard_KL_Divergence\tDecoder_Sigma"
     rows = {}
     if os.path.exists(txt_path):
@@ -1090,8 +1092,8 @@ def execute_standard_free_energy_analysis(model, dataloader, device, kappa, dime
                 fields = line.split("\t")
                 if len(fields) == 7:
                     rows[(float(fields[0]), int(fields[1]), int(fields[2]))] = fields
-    rows[(float(kappa), int(dimension), int(number_of_samples))] = [
-        str(kappa), str(dimension), str(number_of_samples), f"{avg_fe:.6f}", f"{avg_recon:.6f}", f"{avg_kl:.6f}", f"{decoder_sigma:.6f}"]
+    rows[(float(param_value), int(dimension), int(number_of_samples))] = [
+        str(param_value), str(dimension), str(number_of_samples), f"{avg_fe:.6f}", f"{avg_recon:.6f}", f"{avg_kl:.6f}", f"{decoder_sigma:.6f}"]
     tmp_path = txt_path + ".tmp"
     with open(tmp_path, "w") as f:
         f.write(header + "\n")

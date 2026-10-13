@@ -2,10 +2,11 @@
 __pycache__/
 *.pyc
 
-# Datasets and generated experiment outputs
+# Raw data (CelebA, MNIST, crypto, heavy-tail downloads) and generated experiment outputs
+datasets/
 celeba_data/
-celeba_dataset/
 mnist_data/
+heavytail_results/
 
 # LaTeX build artifacts
 *.aux

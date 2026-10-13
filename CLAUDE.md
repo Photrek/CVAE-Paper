@@ -6,13 +6,13 @@ Write and back with experiments the JMLR-style paper "Stable training of extreme
 ## Shared stack
 - Paper: LaTeX in `tex files/` (jmlr2e template, natbib).
 - Experiments: PyTorch scripts in `code/`, run on Google Colab (GPU) through the launcher in `notebooks/`.
-- Datasets: CelebA (128×128 RGB) and MNIST (32×32 grayscale). The paper also cites cryptocurrency log-returns, but that code is not in this repo.
+- Datasets: CelebA (128×128 RGB) and MNIST (32×32 grayscale). The paper also uses eight 1D infinite-variance datasets (`sec:heavytail_data`, code in `code/heavytail_*.py`). Crypto was dropped from the paper on 2026-10-13.
 
 ## Rules that apply everywhere
 - Colab mounts the Shared Drive at `/content/drive/Shareddrives/Photrek & its Partners/Projects/CVAE Paper`. The scripts use absolute paths built from that root, so a renamed or moved folder breaks Colab runs.
-- `celeba_data/`, `celeba_dataset/` and `mnist_data/` stay at the project root. They are gitignored, large, and hold raw data plus training outputs. Never commit them, and never delete or overwrite them without asking first.
+- Raw data lives in `datasets/` (since 2026-10-13: `celeba_dataset/`, `mnist_dataset/`, `crypto_data/` and the heavy-tail downloads). Training outputs stay in `celeba_data/` and `mnist_data/` at the project root. All three are gitignored and large. Never commit them, and never delete or overwrite them without asking first.
 - Reproducibility: the seed is fixed at 42 in `code/run.py`. Don't change the seed, the data split or the evaluation-set size silently, because every reported number depends on them.
-- Numbers in the paper must trace back to a results file under `celeba_data/` or `mnist_data/`. Don't type in or "fix" a reported number by hand.
+- Numbers in the paper must trace back to a results file under `celeba_data/`, `mnist_data/` or `heavytail_results/`. Don't type in or "fix" a reported number by hand.
 - Commit only when I ask.
 
 ## Project-wide lessons

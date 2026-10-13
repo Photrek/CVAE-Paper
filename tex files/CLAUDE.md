@@ -36,6 +36,7 @@
 - Label style: `fig:...`, `tab:...`, `alg:...`, `eq:...`. Older labels end in `.png`. Keep them, but every label must be unique.
 - Metric tables use `booktabs`, a `gray!20` header row, `\textcolor{blue}` for better-than-baseline and `\best{}` (bold green) for the best per column. The κ = 0 row is the baseline.
 - Table numbers come from `../celeba_data/<model>/evaluation_results.txt` and `robustness_results_*.txt`. Uncertainty is written as a single digit in parentheses.
+- Heavy-tail data subsection `sec:heavytail_data` (Results, after the robustness tables, added 2026-10-13; crypto removed the same day): `tab:heavytail_fit` numbers come from `../heavytail_results/fit_table.tsv`, and `Fig_HeavyTail_Distro.png` (`fig:heavytail_distro`) is a copy of `../heavytail_results/Fig_HeavyTail_Distro.png`. After rerunning `../code/heavytail_fit.py`, copy the figure again and recheck the table and the dataset paragraph. Data sources are cited in the dataset paragraph (bib keys `nceiStormEventsDatabase2026`, `brelsfordDatasetRecordedElectricity2024`, `sheEventcorrelatedOutageDataset2024`, `dziewonskiDeterminationEarthquakeSource1981`, `ekstromGlobalCMTProject2012`, `beirlantPracticalAnalysisExtreme1996`, `albrecherReinsuranceActuarialStatistical2017`, `wikimediaPageviewsAPI2026`, `nceiGOESXrayFlare2026`, `usgsWaterDataNation2026`, `hhsBreachPortal2026`). Don't bring crypto back into the paper.
 - `\textcolor{red}{...}` marks open author notes. Remove one only after the note has been addressed.
 
 ## Project Map

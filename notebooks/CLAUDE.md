@@ -8,7 +8,7 @@
 - Cells start with `# %%`, and markdown cells with `# %% [markdown]`. Shell and magic lines are written commented (`# !pip ...`, `# %cd ...`), and jupytext uncomments them in the `.ipynb`.
 
 ## What the notebook does
-Mounts Drive, installs dependencies, `cd`s into `CVAE Paper/code`, fixes CRLF line endings on all `.sh` files (`pipeline_lib.sh` is sourced by `run_pipeline.sh`), runs `DATASET_CHOICE=1 MODEL_CHOICE=2 ./run_pipeline.sh` and then the same with `MODEL_CHOICE=3` (CelebA heavy_vae, then beta_vae; finished steps skip, and a failing `!` cell does not stop the next one), then a final cell calls `runtime.unassign()` to free the GPU (it ends the session, so run it last; Colab's Tools > Settings > Notifications gives the finish pop-up). The dataset and model are set per cell. The κ/β grids live in `../code/run_pipeline.sh`, not here.
+Mounts Drive, installs dependencies, `cd`s into `CVAE Paper/code`, fixes CRLF line endings on all `.sh` files (`pipeline_lib.sh` is sourced by `run_pipeline.sh`), runs `DATASET_CHOICE=1 MODEL_CHOICE=1 ./run_pipeline.sh` and then the same with `MODEL_CHOICE=2` (CelebA cvae, then heavy_vae, to add the new κ; finished steps skip, and a failing `!` cell does not stop the next one), then a final cell calls `runtime.unassign()` to free the GPU (it ends the session, so run it last; Colab's Tools > Settings > Notifications gives the finish pop-up). The dataset and model are set per cell. The κ/β grids live in `../code/run_pipeline.sh`, not here.
 
 ## Project Map
 - Root rules: `../CLAUDE.md`. Roadmap: `../TODO.md`. Pipeline details: `../code/CLAUDE.md`.

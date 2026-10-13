@@ -37,10 +37,10 @@ drive.mount('/content/drive')
 # A failure in one cell does not stop the next one, since `!` commands do not raise errors in Colab.
 
 # %%
-# !DATASET_CHOICE=1 MODEL_CHOICE=2 ./run_pipeline.sh
+# !DATASET_CHOICE=1 MODEL_CHOICE=1 ./run_pipeline.sh
 
 # %%
-# !DATASET_CHOICE=1 MODEL_CHOICE=3 ./run_pipeline.sh
+# !DATASET_CHOICE=1 MODEL_CHOICE=2 ./run_pipeline.sh
 
 
 # %% [markdown]
